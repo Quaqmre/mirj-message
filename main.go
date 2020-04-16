@@ -8,6 +8,12 @@ import (
 
 type Message string
 
+type Room struct {
+	Name      string
+	IsPrivite bool
+	Password  string
+}
+
 type hub struct {
 	clients          map[string]net.Conn
 	addClientChan    chan net.Conn
