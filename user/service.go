@@ -9,40 +9,44 @@ import (
 	"github.com/Quaqmre/mırjmessage/logger"
 )
 
-type Service interface {
-}
+// // Service OutDoor tho user service
+// type Service interface {
+// 	NewUser(name, password string) (*User, error)
+// }
 
-var ErrorInvalidContext = errors.New("username or password cannot be null")
+// ErrorInvalidContext using  when user or password is nil
+var ErrorInvalidContext = errors.New("username or password cannot be nil")
 
+// User hold information most tiny way
 type User struct {
 	Name     string
-	UniqId   int32
+	UniqID   int32
 	Password string
 }
 
-type user struct {
-	dict          map[string]User
+type UserService struct {
+	Dict          map[int32]*User
 	mutex         sync.RWMutex
 	atomicCounter *int32
 	logger        logger.Service
 }
 
 //NewUserService return new Service
-func NewUserService(logger logger.Service) Service {
+func NewUserService(logger logger.Service) *UserService {
 	return newUserService(logger)
 }
 
 //NewUserService return new Service
-func newUserService(logger logger.Service) *user {
+func newUserService(logger logger.Service) *UserService {
 	var t int32 = 0
-	return &user{
-		dict:          make(map[string]User),
+	return &UserService{
+		Dict:          make(map[int32]*User),
 		atomicCounter: &t,
 		logger:        logger,
 	}
 }
 
-func (u *user) NewUser(name, password string) (*User, error) {
+func (u *UserService) NewUser(name, password string) (*User, error) {
 	if name == "" || password == "" {
 		return nil, ErrorInvalidContext
 	}
@@ -51,11 +55,12 @@ func (u *user) NewUser(name, password string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	u.Dict[newUser.UniqID] = newUser
 	u.logger.Info("cmp", "user", "method", "newuser", "name", newUser.Name)
 	return newUser, nil
 }
 
-func (u *user) makeUniqName(user *User) (ru *User, e error) {
+func (u *UserService) makeUniqName(user *User) (ru *User, e error) {
 
 	if math.MaxInt32 <= *u.atomicCounter {
 		defer func() {
@@ -70,9 +75,11 @@ func (u *user) makeUniqName(user *User) (ru *User, e error) {
 
 	nUser.Name = user.Name
 	nUser.Password = user.Password
-	nUser.UniqId = i
+	nUser.UniqID = i
 
 	u.logger.Info("cmp", "user", "method", "makeuniqname", "err", nil)
 
 	return nUser, nil
 }
+
+// TODO implement in memory store

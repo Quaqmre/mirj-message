@@ -12,7 +12,7 @@ import (
 
 var mockedlogger logger.Service = mock.NewMockedLogger()
 
-var u *user = newUserService(mockedlogger)
+var u *UserService = newUserService(mockedlogger)
 
 func TestNewUser(t *testing.T) {
 	ex, err := u.NewUser("ali", "arat")
@@ -20,8 +20,8 @@ func TestNewUser(t *testing.T) {
 		t.Error("expected nil error but returned:", err)
 
 	}
-	if ex.UniqId != 1 {
-		t.Error("expected uniqname ali1 but returned:", ex.UniqId)
+	if ex.UniqID != 1 {
+		t.Error("expected uniqname ali1 but returned:", ex.UniqID)
 	}
 }
 func TestMakeUniqName_with_max_int32(t *testing.T) {
@@ -46,8 +46,8 @@ func TestAtomic_Increase_with_multiple_goroutine(t *testing.T) {
 		wg.Wait()
 	}()
 	lastNewUser, _ := u.NewUser("test", "deneme")
-	if lastNewUser.UniqId != 1001 {
-		t.Error("expected count 1001 but returned:", lastNewUser.UniqId)
+	if lastNewUser.UniqID != 1001 {
+		t.Error("expected count 1001 but returned:", lastNewUser.UniqID)
 	}
 }
 
@@ -61,7 +61,7 @@ func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
 			go func(j int) {
 				defer wg.Done()
 				user, _ := u.NewUser("user"+string(j), "pass")
-				atomic.AddInt32(&count, user.UniqId)
+				atomic.AddInt32(&count, user.UniqID)
 			}(i)
 		}
 		wg.Wait()
