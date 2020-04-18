@@ -3,6 +3,7 @@ package room
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 
 	"github.com/Quaqmre/mırjmessage/client"
@@ -27,6 +28,7 @@ type Room struct {
 
 // NewRoom give back new chatroom
 func NewRoom(name string, u *user.UserService) *Room {
+	log.Println("new room Created")
 	clientService := client.NewService()
 	return &Room{
 		Name:             name,
@@ -46,9 +48,12 @@ type Package struct {
 
 // Run Handle all messaging issue
 func (r *Room) Run() {
+	log.Println(r.Name + " room running")
 	for {
 		select {
 		case conn := <-r.AddClientChan:
+			log.Println(r.Name + " accept a client")
+
 			recvBuffer := make([]byte, 256)
 			bytesRead, err := conn.Read(recvBuffer)
 			if err != nil {
@@ -57,22 +62,26 @@ func (r *Room) Run() {
 			data := recvBuffer[:bytesRead]
 			user := &user.User{}
 			json.Unmarshal(data, user)
+			log.Printf("first message is %#v\n", user)
 
 			newUser, err := r.userService.NewUser(user.Name, user.Password)
+			log.Printf("new user created:%v\n", newUser)
 
 			if err != nil {
 				return
 			}
-			cl, _ := r.clientService.New(conn.LocalAddr().String(), conn, newUser.UniqID)
+			cl, _ := r.clientService.New(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID)
+			log.Printf("client created:%v\n", cl)
 			go func() {
 
 				r.handleRead(cl)
 			}()
 
 		case c := <-r.RemoveClientChan:
-			delete(r.clientService.Clients, c.Key)
+			close(c.Done)
 			_ = c
 		case m := <-r.BroadcastChan:
+			log.Println("get broad cast message : ", m)
 			r.broadcastMessage(m)
 		}
 	}
@@ -80,25 +89,37 @@ func (r *Room) Run() {
 
 // TODO : channels still not checked
 func (r *Room) handleRead(cl *client.Client) {
+	log.Println(string(cl.UserID) + " handleing Read")
+	go func() {
+		ch := make(chan string)
+		go cl.Read(ch)
+		for {
+			select {
+			case <-cl.Done:
+				delete(r.clientService.Clients, cl.Key)
+				return
+			default:
+				log.Println("waiting coming message from tcp read")
+				basicMessage := <-ch
 
-	ch := make(chan string)
-	go cl.Read(ch)
-	for {
-
-		basicMessage := <-ch
-
-		username := r.userService.Dict[cl.UserID]
-		msg := fmt.Sprintf("%s: %s", username.Name, basicMessage)
-		r.BroadcastChan <- msg
-	}
+				username := r.userService.Dict[cl.UserID]
+				msg := fmt.Sprintf("%s: %s", username.Name, basicMessage)
+				log.Println("formated message created")
+				r.BroadcastChan <- msg
+			}
+		}
+	}()
 }
 
 // TODO : uniqId implementasyonuna gerek yoktu çünkü gelen ip uniq
 
 // broadcastMessage sends a message to all client conns in the pool
 func (r *Room) broadcastMessage(s string) {
-
+	log.Println("will send meesage broad cast :" + s)
 	for _, client := range r.clientService.Clients {
-		client.Con.Write([]byte(s))
+		_, err := client.Con.Write([]byte(s))
+		if err != nil {
+			log.Fatalln("cant send a client:" + string(client.UserID))
+		}
 	}
 }

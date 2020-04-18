@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"testing"
-	"time"
 
 	"github.com/Quaqmre/mırjmessage/logger"
 	"github.com/Quaqmre/mırjmessage/mock"
@@ -37,8 +36,6 @@ func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
 			// log.Println("Incoming client connection")
 		}
 	}()
-	time.Sleep(time.Second * 2)
-
 	c, err := net.Dial("tcp", "localhost:9001")
 
 	if err != nil {
@@ -70,7 +67,6 @@ func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
 	bytes, _ := json.Marshal(newU)
 
 	_, _ = c.Write(bytes)
-	time.Sleep(time.Second)
 	_, _ = c.Write([]byte("test"))
 
 	turned := <-readedString

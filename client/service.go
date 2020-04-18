@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"log"
 	"net"
 )
 
@@ -17,6 +18,7 @@ type Client struct {
 	Con      net.Conn
 	UserID   int32
 	Key      string
+	Done     chan struct{}
 }
 
 // NewService make interface of client service
@@ -47,6 +49,8 @@ func (c *Service) newClient(ip string, con net.Conn, userID int32) (*Client, err
 		ClientIp: ip,
 		Con:      con,
 		UserID:   userID,
+		Key:      con.LocalAddr().String(),
+		Done:     make(chan struct{}),
 	}
 
 	c.Clients[ip] = client
@@ -62,15 +66,23 @@ func (c *Service) Delete(ip string) {
 // TODO : channel kapanmalı yoksa hep dinleme yapılacak
 func (c *Client) Read(ch chan string) {
 	for {
-		recvBuffer := make([]byte, 256)
-		bytesRead, err := c.Con.Read(recvBuffer)
-		if err != nil {
+		select {
+		case <-c.Done:
+			log.Println(string(c.UserID) + " done flag expired")
+			c.Con.Close()
 			return
-		}
-		// t := string(m)
-		data := recvBuffer[:bytesRead]
+		default:
+			recvBuffer := make([]byte, 256)
+			bytesRead, err := c.Con.Read(recvBuffer)
+			if err != nil {
+				log.Fatal("during read message error: ", err)
+				return
+			}
+			// t := string(m)
+			data := recvBuffer[:bytesRead]
 
-		ch <- string(data)
+			ch <- string(data)
+		}
 	}
 }
 

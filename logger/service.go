@@ -23,7 +23,10 @@ func NewLogger(w io.Writer) logger {
 }
 
 func (l logger) Info(i ...interface{}) error {
-	return l.Logger.Log("loglevel", "info", i)
+	i = append(i, "loglevel")
+	i = append(i, "info")
+
+	return l.Logger.Log(i...)
 }
 func (l logger) Warning(i ...interface{}) error {
 	return l.Logger.Log("loglevel", "warning", i)
