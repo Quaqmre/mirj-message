@@ -13,7 +13,7 @@ import (
 
 var mockedlogger logger.Service = mock.NewMockedLogger()
 
-var u *user.UserService = user.NewUserService(mockedlogger)
+var u user.Service = user.NewUserService(mockedlogger)
 
 var roomservice *Room = NewRoom("deneme", u)
 

@@ -17,6 +17,11 @@ import (
 // ErrorInvalidContext using  when user or password is nil
 var ErrorInvalidContext = errors.New("username or password cannot be nil")
 
+type Service interface {
+	NewUser(name, password string) (*User, error)
+	Get(userID int32) *User
+}
+
 // User hold information most tiny way
 type User struct {
 	Name     string
@@ -32,7 +37,7 @@ type UserService struct {
 }
 
 //NewUserService return new Service
-func NewUserService(logger logger.Service) *UserService {
+func NewUserService(logger logger.Service) Service {
 	return newUserService(logger)
 }
 
@@ -55,7 +60,9 @@ func (u *UserService) NewUser(name, password string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	u.mutex.Lock()
 	u.Dict[newUser.UniqID] = newUser
+	u.mutex.Unlock()
 	u.logger.Info("cmp", "user", "method", "newuser", "name", newUser.Name)
 	return newUser, nil
 }
@@ -80,6 +87,11 @@ func (u *UserService) makeUniqName(user *User) (ru *User, e error) {
 	u.logger.Info("cmp", "user", "method", "makeuniqname", "err", nil)
 
 	return nUser, nil
+}
+
+// Get user in map
+func (u *UserService) Get(userID int32) *User {
+	return u.Dict[userID]
 }
 
 // TODO implement in memory store

@@ -23,11 +23,11 @@ type Room struct {
 	RemoveClientChan chan client.Client
 	BroadcastChan    chan string
 	clientService    *client.Service
-	userService      *user.UserService
+	userService      user.Service
 }
 
 // NewRoom give back new chatroom
-func NewRoom(name string, u *user.UserService) *Room {
+func NewRoom(name string, u user.Service) *Room {
 	log.Println("new room Created")
 	clientService := client.NewService()
 	return &Room{
@@ -102,7 +102,7 @@ func (r *Room) handleRead(cl *client.Client) {
 				log.Println("waiting coming message from tcp read")
 				basicMessage := <-ch
 
-				username := r.userService.Dict[cl.UserID]
+				username := r.userService.Get(cl.UserID)
 				msg := fmt.Sprintf("%s: %s", username.Name, basicMessage)
 				log.Println("formated message created")
 				r.BroadcastChan <- msg

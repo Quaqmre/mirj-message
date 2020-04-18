@@ -10,21 +10,42 @@ import (
 	"github.com/Quaqmre/mırjmessage/mock"
 )
 
-var mockedlogger logger.Service = mock.NewMockedLogger()
 
-var u *UserService = newUserService(mockedlogger)
 
 func TestNewUser(t *testing.T) {
-	ex, err := u.NewUser("ali", "arat")
-	if err != nil {
-		t.Error("expected nil error but returned:", err)
-
+	var mockedlogger logger.Service = mock.NewMockedLogger()
+	var u *UserService = newUserService(mockedlogger)
+	
+	tests:=[]struct{
+		name string
+		input string
+		expectedResult int32
+	}{
+		{
+			name:"firstuser",
+			input:"user1",
+			expectedResult:1,
+		},
+		{
+			name:"seconduser",
+			input:"user2",
+			expectedResult:2,
+		},
 	}
-	if ex.UniqID != 1 {
-		t.Error("expected uniqname ali1 but returned:", ex.UniqID)
+	for _,test:=range tests{
+		ex,err :=u.NewUser(test.input, "arat")
+		if err != nil {
+			t.Error("expected nil error but returned:", err)
+		}
+		if ex.UniqID != test.expectedResult {
+			t.Error("expected uniqname ali1 but returned:", ex.UniqID)
+		}
 	}
 }
 func TestMakeUniqName_with_max_int32(t *testing.T) {
+	var mockedlogger logger.Service = mock.NewMockedLogger()
+	var u *UserService = newUserService(mockedlogger)
+
 	a := int32(math.MaxInt32)
 	u.atomicCounter = &a
 	_, err := u.NewUser("ali", "arat")
@@ -33,6 +54,8 @@ func TestMakeUniqName_with_max_int32(t *testing.T) {
 	}
 }
 func TestAtomic_Increase_with_multiple_goroutine(t *testing.T) {
+	var mockedlogger logger.Service = mock.NewMockedLogger()
+	var u *UserService = newUserService(mockedlogger)
 
 	func() {
 		var wg sync.WaitGroup
@@ -52,6 +75,9 @@ func TestAtomic_Increase_with_multiple_goroutine(t *testing.T) {
 }
 
 func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
+	var mockedlogger logger.Service = mock.NewMockedLogger()
+	var u *UserService = newUserService(mockedlogger)
+
 	count := int32(0)
 	loopcount := 10000
 	func() {
