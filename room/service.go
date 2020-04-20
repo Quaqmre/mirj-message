@@ -1,13 +1,12 @@
 package room
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 
 	"github.com/Quaqmre/mırjmessage/client"
 	"github.com/Quaqmre/mırjmessage/user"
+	"github.com/gorilla/websocket"
 )
 
 // Room is a chating place there is a lot of message and user inside
@@ -19,7 +18,7 @@ type Room struct {
 	BanList          []int
 	IsPrivite        bool
 	Capacity         int
-	AddClientChan    chan net.Conn
+	AddClientChan    chan *websocket.Conn
 	RemoveClientChan chan client.Client
 	BroadcastChan    chan string
 	clientService    *client.Service
@@ -34,7 +33,7 @@ func NewRoom(name string, u user.Service) *Room {
 		Name:             name,
 		clientService:    clientService,
 		userService:      u,
-		AddClientChan:    make(chan net.Conn),
+		AddClientChan:    make(chan *websocket.Conn),
 		RemoveClientChan: make(chan client.Client),
 		BroadcastChan:    make(chan string),
 	}
@@ -54,28 +53,35 @@ func (r *Room) Run() {
 		case conn := <-r.AddClientChan:
 			log.Println(r.Name + " accept a client")
 
-			recvBuffer := make([]byte, 256)
-			bytesRead, err := conn.Read(recvBuffer)
+			messageType, data, err := conn.ReadMessage()
 			if err != nil {
 				return
 			}
-			data := recvBuffer[:bytesRead]
-			user := &user.User{}
-			json.Unmarshal(data, user)
-			log.Printf("first message is %#v\n", user)
 
-			newUser, err := r.userService.NewUser(user.Name, user.Password)
-			log.Printf("new user created:%v\n", newUser)
+			if messageType == websocket.BinaryMessage {
 
-			if err != nil {
-				return
+				user, err := r.userService.Marshall(data)
+
+				if err != nil {
+					return
+				}
+
+				log.Printf("first message is %#v\n", user)
+
+				newUser, err := r.userService.NewUser(user.Name, user.Password)
+				log.Printf("new user created:%v\n", newUser)
+
+				if err != nil {
+					return
+				}
+
+				cl, _ := r.clientService.New(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID)
+				log.Printf("client created:%v\n", cl)
+				go func() {
+
+					r.handleRead(cl)
+				}()
 			}
-			cl, _ := r.clientService.New(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID)
-			log.Printf("client created:%v\n", cl)
-			go func() {
-
-				r.handleRead(cl)
-			}()
 
 		case c := <-r.RemoveClientChan:
 			close(c.Done)
@@ -117,7 +123,7 @@ func (r *Room) handleRead(cl *client.Client) {
 func (r *Room) broadcastMessage(s string) {
 	log.Println("will send meesage broad cast :" + s)
 	for _, client := range r.clientService.Clients {
-		_, err := client.Con.Write([]byte(s))
+		err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
 		if err != nil {
 			log.Fatalln("cant send a client:" + string(client.UserID))
 		}

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"errors"
 	"math"
 	"sync"
@@ -20,6 +21,7 @@ var ErrorInvalidContext = errors.New("username or password cannot be nil")
 type Service interface {
 	NewUser(name, password string) (*User, error)
 	Get(userID int32) *User
+	Marshall(source []byte) (*User, error)
 }
 
 // User hold information most tiny way
@@ -92,6 +94,20 @@ func (u *UserService) makeUniqName(user *User) (ru *User, e error) {
 // Get user in map
 func (u *UserService) Get(userID int32) *User {
 	return u.Dict[userID]
+}
+
+// TODO : give a change to admin parse json or protobuff
+
+// Marshall bytes to user
+func (u *UserService) Marshall(source []byte) (*User, error) {
+	user := &User{}
+	err := json.Unmarshal(source, user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // TODO implement in memory store

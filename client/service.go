@@ -3,7 +3,8 @@ package client
 import (
 	"errors"
 	"log"
-	"net"
+
+	"github.com/gorilla/websocket"
 )
 
 var ErrorClientExist = errors.New("user already exist")
@@ -15,7 +16,7 @@ type Service struct {
 //Client wrap User and add some net info
 type Client struct {
 	ClientIp string
-	Con      net.Conn
+	Con      *websocket.Conn
 	UserID   int32
 	Key      string
 	Done     chan struct{}
@@ -33,13 +34,13 @@ func newservice() *Service {
 }
 
 // New store with user and net connection
-func (c *Service) New(ip string, con net.Conn, userID int32) (*Client, error) {
+func (c *Service) New(ip string, con *websocket.Conn, userID int32) (*Client, error) {
 	return c.newClient(ip, con, userID)
 }
 
 // TODO : bir kullanıcı sadece 1 kere mi clients içinde olablir ? Yoksa geçerli olanı mı dönmek gerek
 // INFO : client servisi her room özelinde bir tane generete edilmelidir.
-func (c *Service) newClient(ip string, con net.Conn, userID int32) (*Client, error) {
+func (c *Service) newClient(ip string, con *websocket.Conn, userID int32) (*Client, error) {
 
 	if _, ok := c.Clients[ip]; ok {
 		return nil, ErrorClientExist
@@ -72,16 +73,16 @@ func (c *Client) Read(ch chan string) {
 			c.Con.Close()
 			return
 		default:
-			recvBuffer := make([]byte, 256)
-			bytesRead, err := c.Con.Read(recvBuffer)
+			typ, bytesRead, err := c.Con.ReadMessage()
+
 			if err != nil {
 				log.Fatal("during read message error: ", err)
 				return
 			}
-			// t := string(m)
-			data := recvBuffer[:bytesRead]
-
-			ch <- string(data)
+			_ = typ
+			if typ == websocket.BinaryMessage {
+				ch <- string(bytesRead)
+			}
 		}
 	}
 }

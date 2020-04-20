@@ -2,12 +2,13 @@ package main
 
 import (
 	"log"
-	"net"
+	"net/http"
 	"os"
 
 	"github.com/Quaqmre/mırjmessage/logger"
 	"github.com/Quaqmre/mırjmessage/room"
 	"github.com/Quaqmre/mırjmessage/user"
+	"github.com/gorilla/websocket"
 )
 
 func main() {
@@ -15,23 +16,29 @@ func main() {
 	userServce := user.NewUserService(loggerService)
 	room := room.NewRoom("deneme", userServce)
 
-	lnSCock, err := net.Listen("tcp", ":9001")
-	i := 1
-	if err != nil {
-		log.Fatalln("Failed to open log file:", err)
-	}
-	log.Println("Server running...")
-	go room.Run()
-	for {
-		conn, err := lnSCock.Accept()
-		if err != nil {
-			log.Fatalln("Error during client connection attemp")
-		}
-		log.Println("Incoming client connection")
-		room.AddClientChan <- conn
-		i++
+	upgrader := &websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		}}
 
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		room.AddClientChan <- conn
+		log.Println("Added new client. Now", "clients connected.")
 	}
+	go room.Run()
+
+	http.HandleFunc("/", handler)
+	log.Println("Server running...")
+
+	http.ListenAndServe("localhost:9001", nil)
 
 }
 

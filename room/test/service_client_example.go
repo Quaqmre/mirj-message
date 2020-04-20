@@ -2,8 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"net"
+	"fmt"
+	"log"
+	"net/url"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type User struct {
@@ -13,9 +17,11 @@ type User struct {
 
 // This file test for after server up
 func main() {
-	c, err := net.Dial("tcp", "localhost:9001")
+	u := url.URL{Scheme: "ws", Host: "localhost" + ":9001", Path: "/"}
+	fmt.Println(u.String())
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	newU := User{Name: "akif", Password: "test"}
@@ -24,11 +30,11 @@ func main() {
 
 	time.Sleep(time.Second * 5)
 
-	_, _ = c.Write(bytes)
+	_ = c.WriteMessage(websocket.BinaryMessage, bytes)
 
 	for {
 
 		time.Sleep(time.Second)
-		_, _ = c.Write([]byte("test"))
+		_ = c.WriteMessage(websocket.BinaryMessage, []byte("test"))
 	}
 }
