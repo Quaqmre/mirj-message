@@ -23,7 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	newU := User{Name: "client2", Password: "test"}
+	newU := User{Name: "client3", Password: "test3"}
 
 	bytes, _ := json.Marshal(newU)
 
