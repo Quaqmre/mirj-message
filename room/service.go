@@ -23,6 +23,7 @@ type Room struct {
 	BroadcastChan    chan string
 	clientService    *client.Service
 	userService      user.Service
+	EventDespatcher  *EventDispatcher
 }
 
 // NewRoom give back new chatroom
@@ -36,6 +37,7 @@ func NewRoom(name string, u user.Service) *Room {
 		AddClientChan:    make(chan *websocket.Conn),
 		RemoveClientChan: make(chan client.Client),
 		BroadcastChan:    make(chan string),
+		EventDespatcher:  NewEventDispatcher(),
 	}
 }
 
@@ -47,41 +49,16 @@ type Package struct {
 
 // Run Handle all messaging issue
 func (r *Room) Run() {
+
+	go r.EventDespatcher.RunEventLoop()
 	log.Println(r.Name + " room running")
 	for {
 		select {
 		case conn := <-r.AddClientChan:
 			log.Println(r.Name + " accept a client")
-
-			messageType, data, err := conn.ReadMessage()
-			if err != nil {
-				return
-			}
-
-			if messageType == websocket.BinaryMessage {
-
-				user, err := r.userService.Marshall(data)
-
-				if err != nil {
-					return
-				}
-
-				log.Printf("first message is %#v\n", user)
-
-				newUser, err := r.userService.NewUser(user.Name, user.Password)
-				log.Printf("new user created:%v\n", newUser)
-
-				if err != nil {
-					return
-				}
-
-				cl, _ := r.clientService.New(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID)
-				log.Printf("client created:%v\n", cl)
-				go func() {
-
-					r.handleRead(cl)
-				}()
-			}
+			go func() {
+				r.acceptNewClient(conn)
+			}()
 
 		case c := <-r.RemoveClientChan:
 			close(c.Done)
@@ -93,9 +70,51 @@ func (r *Room) Run() {
 	}
 }
 
+func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
+	defer func() {
+		if err != nil {
+			log.Fatalf("new client cant accept for:%s", err)
+		}
+	}()
+
+	messageType, data, err := conn.ReadMessage()
+
+	if err != nil {
+		return err
+	}
+
+	if messageType == websocket.BinaryMessage {
+
+		user, err := r.userService.Marshall(data)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("first message is %#v\n", user)
+
+		newUser, err := r.userService.NewUser(user.Name, user.Password)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("new user created:%v\n", newUser)
+
+		cl, err := r.clientService.New(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID)
+		if err != nil {
+			return err
+		}
+		event := UserConnected{ClientID: cl.UserID, Name: newUser.Name}
+		r.EventDespatcher.FireUserConnected(&event)
+		log.Printf("client created:%v\n", cl)
+
+		r.handleRead(cl)
+	}
+	return nil
+}
+
 // TODO : channels still not checked
 func (r *Room) handleRead(cl *client.Client) {
-	log.Println(string(cl.UserID) + " handleing Read")
+	log.Println(string(cl.UserID) + " handling Read")
 	go func() {
 		ch := make(chan string)
 		go cl.Read(ch)

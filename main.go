@@ -14,7 +14,11 @@ import (
 func main() {
 	loggerService := logger.NewLogger(os.Stderr)
 	userServce := user.NewUserService(loggerService)
-	room := room.NewRoom("deneme", userServce)
+	rm := room.NewRoom("deneme", userServce)
+
+	// first handler for each event
+	sender := room.NewSender(rm)
+	rm.EventDespatcher.RegisterUserConnectedListener(sender)
 
 	upgrader := &websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -30,10 +34,10 @@ func main() {
 			return
 		}
 
-		room.AddClientChan <- conn
+		rm.AddClientChan <- conn
 		log.Println("Added new client. Now", "clients connected.")
 	}
-	go room.Run()
+	go rm.Run()
 
 	http.HandleFunc("/", handler)
 	log.Println("Server running...")

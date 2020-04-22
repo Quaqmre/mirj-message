@@ -20,6 +20,7 @@ type Client struct {
 	UserID   int32
 	Key      string
 	Done     chan struct{}
+	ch       chan *[]byte
 }
 
 // NewService make interface of client service
