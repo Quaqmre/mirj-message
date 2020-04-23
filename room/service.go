@@ -1,10 +1,8 @@
 package room
 
 import (
-	"fmt"
 	"log"
 
-	"github.com/Quaqmre/mırjmessage/client"
 	"github.com/Quaqmre/mırjmessage/user"
 	"github.com/gorilla/websocket"
 )
@@ -18,26 +16,27 @@ type Room struct {
 	BanList          []int
 	IsPrivite        bool
 	Capacity         int
+	Clients          map[string]*Client
 	AddClientChan    chan *websocket.Conn
-	RemoveClientChan chan client.Client
+	RemoveClientChan chan Client
 	BroadcastChan    chan string
-	clientService    *client.Service
-	userService      user.Service
-	EventDespatcher  *EventDispatcher
+	// clientService    *client.Service
+	userService     user.Service
+	EventDespatcher *EventDispatcher
 }
 
 // NewRoom give back new chatroom
 func NewRoom(name string, u user.Service) *Room {
 	log.Println("new room Created")
-	clientService := client.NewService()
+	// clientService := client.NewService()
 	return &Room{
 		Name:             name,
-		clientService:    clientService,
 		userService:      u,
 		AddClientChan:    make(chan *websocket.Conn),
-		RemoveClientChan: make(chan client.Client),
+		RemoveClientChan: make(chan Client),
 		BroadcastChan:    make(chan string),
 		EventDespatcher:  NewEventDispatcher(),
+		Clients:          make(map[string]*Client),
 	}
 }
 
@@ -61,7 +60,7 @@ func (r *Room) Run() {
 			}()
 
 		case c := <-r.RemoveClientChan:
-			close(c.Done)
+			c.CancelContext()
 			_ = c
 		case m := <-r.BroadcastChan:
 			log.Println("get broad cast message : ", m)
@@ -99,49 +98,50 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 
 		log.Printf("new user created:%v\n", newUser)
 
-		cl, err := r.clientService.New(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID)
+		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID, r)
 		if err != nil {
 			return err
 		}
+		r.Clients[cl.ClientIp] = cl
 		event := UserConnected{ClientID: cl.UserID, Name: newUser.Name}
 		r.EventDespatcher.FireUserConnected(&event)
 		log.Printf("client created:%v\n", cl)
 
-		r.handleRead(cl)
+		cl.Listen()
 	}
 	return nil
 }
 
-// TODO : channels still not checked
-func (r *Room) handleRead(cl *client.Client) {
-	log.Println(string(cl.UserID) + " handling Read")
-	go func() {
-		ch := make(chan string)
-		go cl.Read(ch)
-		for {
-			select {
-			case <-cl.Done:
-				delete(r.clientService.Clients, cl.Key)
-				return
-			default:
-				log.Println("waiting coming message from tcp read")
-				basicMessage := <-ch
+// // TODO : channels still not checked
+// func (r *Room) handleRead(cl *client.Client) {
+// 	log.Println(string(cl.UserID) + " handling Read")
+// 	go func() {
+// 		ch := make(chan string)
+// 		go cl.Listen()
+// 		for {
+// 			select {
+// 			case <-cl.Context.Done():
+// 				// delete(r.clientService.Clients, cl.Key)
+// 				return
+// 			default:
+// 				log.Println("waiting coming message from tcp read")
+// 				basicMessage := <-ch
 
-				username := r.userService.Get(cl.UserID)
-				msg := fmt.Sprintf("%s: %s", username.Name, basicMessage)
-				log.Println("formated message created")
-				r.BroadcastChan <- msg
-			}
-		}
-	}()
-}
+// 				username := r.userService.Get(cl.UserID)
+// 				msg := fmt.Sprintf("%s: %s", username.Name, basicMessage)
+// 				log.Println("formated message created")
+// 				r.BroadcastChan <- msg
+// 			}
+// 		}
+// 	}()
+// }
 
 // TODO : uniqId implementasyonuna gerek yoktu çünkü gelen ip uniq
 
 // broadcastMessage sends a message to all client conns in the pool
 func (r *Room) broadcastMessage(s string) {
 	log.Println("will send meesage broad cast :" + s)
-	for _, client := range r.clientService.Clients {
+	for _, client := range r.Clients {
 		err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
 		if err != nil {
 			log.Fatalln("cant send a client:" + string(client.UserID))

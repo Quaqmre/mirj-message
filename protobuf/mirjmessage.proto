@@ -1,0 +1,38 @@
+syntax = "proto3";
+package mirjmessage;
+option go_package = "pb";
+
+message UserMessage {
+  oneof content {
+    ClientJoin      clientJoin    = 1;
+    ClientLeft      clientLeft    = 2;
+    ClientCommand   clientCommand = 3;
+    ClientMessage   clientMessage = 4;
+  }
+}
+
+message Singin {
+  string name     = 1;
+  string password = 2;
+}
+
+message ClientJoin {
+  string name     = 1;
+  string password = 2;
+}
+
+message ClientLeft {
+
+}
+message ClientMessage {
+string message=1;
+}
+
+message ClientCommand {
+  ClientInput clientInput = 1;
+}
+
+enum ClientInput {
+  LSROOM = 0;
+  LSUSER = 1;
+}

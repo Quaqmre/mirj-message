@@ -1,6 +1,10 @@
 package room
 
-import "time"
+import (
+	"time"
+
+	"github.com/Quaqmre/mırjmessage/pb"
+)
 
 type UserConnected struct {
 	ClientID int32
@@ -22,6 +26,21 @@ func (handler *userConnectedHandler) handle() {
 	}
 }
 
+type UserInputListener interface {
+	HandleUserInput(*pb.UserMessage)
+}
+
+type userInputHandler struct {
+	event          *pb.UserMessage
+	eventListeners []UserInputListener
+}
+
+func (handler *userInputHandler) handle() {
+	for _, listener := range handler.eventListeners {
+		listener.HandleUserInput(handler.event)
+	}
+}
+
 type eventHandler interface {
 	handle()
 }
@@ -36,6 +55,7 @@ type EventDispatcher struct {
 	// LISTENER LISTS
 
 	userConnectedListeners []UserConnectedListener
+	userInputListener      []UserInputListener
 }
 
 func NewEventDispatcher() *EventDispatcher {
@@ -77,4 +97,16 @@ func (dispatcher *EventDispatcher) FireUserConnected(event *UserConnected) {
 
 func (dispatcher *EventDispatcher) RegisterUserConnectedListener(listener UserConnectedListener) {
 	dispatcher.userConnectedListeners = append(dispatcher.userConnectedListeners, listener)
+}
+func (dispatcher *EventDispatcher) FireUserInput(event *pb.UserMessage) {
+	handler := &userInputHandler{
+		event:          event,
+		eventListeners: dispatcher.userInputListener,
+	}
+
+	dispatcher.priority1EventsQueue <- handler
+}
+
+func (dispatcher *EventDispatcher) RegisterUserInputListener(listener UserInputListener) {
+	dispatcher.userInputListener = append(dispatcher.userInputListener, listener)
 }

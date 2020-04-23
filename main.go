@@ -19,6 +19,7 @@ func main() {
 	// first handler for each event
 	sender := room.NewSender(rm)
 	rm.EventDespatcher.RegisterUserConnectedListener(sender)
+	rm.EventDespatcher.RegisterUserInputListener(sender)
 
 	upgrader := &websocket.Upgrader{
 		ReadBufferSize:  1024,

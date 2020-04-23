@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/Quaqmre/mırjmessage/pb"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,9 +34,18 @@ func main() {
 
 	_ = c.WriteMessage(websocket.BinaryMessage, bytes)
 
+	userMessage := &pb.UserMessage_ClientMessage{
+		ClientMessage: &pb.ClientMessage{
+			Message: "selam babalık",
+		},
+	}
+	message := &pb.UserMessage{Content: userMessage}
+
+	datam, err := proto.Marshal(message)
+
 	for {
 
 		time.Sleep(time.Second)
-		_ = c.WriteMessage(websocket.BinaryMessage, []byte("test"))
+		_ = c.WriteMessage(websocket.BinaryMessage, datam)
 	}
 }

@@ -12,7 +12,9 @@ import (
 
 	"github.com/Quaqmre/mırjmessage/logger"
 	"github.com/Quaqmre/mırjmessage/mock"
+	"github.com/Quaqmre/mırjmessage/pb"
 	"github.com/Quaqmre/mırjmessage/user"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
 
@@ -22,9 +24,12 @@ var u user.Service = user.NewUserService(mockedlogger)
 
 var roomservice *Room = NewRoom("deneme", u)
 
+var sender *Sender = NewSender(roomservice)
+
 // Ne kadar kötü bir test case
 func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
-
+	roomservice.EventDespatcher.RegisterUserConnectedListener(sender)
+	roomservice.EventDespatcher.RegisterUserInputListener(sender)
 	go roomservice.Run()
 
 	upgrader := &websocket.Upgrader{
@@ -71,19 +76,33 @@ func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
 
 			str := string(data)
 
-			if str != "akif: test" {
+			if str != "deneme123" {
 				readedString <- str
 			}
 			readedString <- "success"
 		}
 	}(readedString)
 
-	newU, _ := roomservice.userService.NewUser("akif", "deneme")
+	newU := &user.User{
+		Name:     "akif",
+		Password: "deneme",
+	}
 
 	bytes, _ := json.Marshal(newU)
 
 	_ = c.WriteMessage(websocket.BinaryMessage, bytes)
-	_ = c.WriteMessage(websocket.BinaryMessage, []byte("test"))
+
+	message := &pb.UserMessage{
+		Content: &pb.UserMessage_ClientMessage{
+			ClientMessage: &pb.ClientMessage{
+				Message: "deneme123",
+			},
+		},
+	}
+
+	bytes1, _ := proto.Marshal(message)
+
+	_ = c.WriteMessage(websocket.BinaryMessage, bytes1)
 
 	turned := <-readedString
 	sync.Done()
