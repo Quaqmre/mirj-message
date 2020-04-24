@@ -1,8 +1,10 @@
-package room
+package communication
 
 import (
+	"github.com/Quaqmre/mırjmessage/pb"
+	"github.com/Quaqmre/mırjmessage/events"
 	"log"
-
+	"github.com/golang/protobuf/proto"
 	"github.com/Quaqmre/mırjmessage/user"
 	"github.com/gorilla/websocket"
 )
@@ -60,7 +62,7 @@ func (r *Room) Run() {
 			}()
 
 		case c := <-r.RemoveClientChan:
-			c.CancelContext()
+			c.Done()
 			_ = c
 		case m := <-r.BroadcastChan:
 			log.Println("get broad cast message : ", m)
@@ -103,7 +105,7 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 			return err
 		}
 		r.Clients[cl.ClientIp] = cl
-		event := UserConnected{ClientID: cl.UserID, Name: newUser.Name}
+		event := events.UserConnected{ClientID: cl.UserID, Name: newUser.Name}
 		r.EventDespatcher.FireUserConnected(&event)
 		log.Printf("client created:%v\n", cl)
 
@@ -136,6 +138,32 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 // 	}()
 // }
 
+func (r *Room) SendToAllClients(message *pb.Message) {
+	bytes, err := proto.Marshal(message)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, c := range r.Clients {
+		c.SendMessage(&bytes)
+	}
+}
+func (r *Room) SendToAllClientsWithIgnored(message *pb.Message,clientIds ...int32) {
+	bytes, err := proto.Marshal(message)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, c := range r.Clients {
+		for _,id :=range clientIds {
+			if c.UserID!=id {
+				c.SendMessage(&bytes)
+			}
+		}
+	}
+}
+
+
 // TODO : uniqId implementasyonuna gerek yoktu çünkü gelen ip uniq
 
 // broadcastMessage sends a message to all client conns in the pool
@@ -145,6 +173,20 @@ func (r *Room) broadcastMessage(s string) {
 		err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
 		if err != nil {
 			log.Fatalln("cant send a client:" + string(client.UserID))
+		}
+	}
+}
+// broadcastMessageWithIgnored sends a message to all client conns in the pool
+func (r *Room) broadcastMessageWithIgnored(s string,id ...int32) {
+	log.Println("will send meesage broad cast :" + s)
+	for _, client := range r.Clients {
+		for _,i :=range id {
+			if client.UserID!=i {
+				err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
+				if err != nil {
+					log.Fatalln("cant send a client:" + string(client.UserID))
+				}
+			}
 		}
 	}
 }

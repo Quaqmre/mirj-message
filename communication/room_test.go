@@ -1,4 +1,4 @@
-package room
+package communication
 
 import (
 	"encoding/json"
@@ -27,9 +27,9 @@ var roomservice *Room = NewRoom("deneme", u)
 var sender *Sender = NewSender(roomservice)
 
 // Ne kadar kötü bir test case
-func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
+func TestAtomic_Increase_generate_uniq_Id(t *testing.T) {
 	roomservice.EventDespatcher.RegisterUserConnectedListener(sender)
-	roomservice.EventDespatcher.RegisterUserInputListener(sender)
+	roomservice.EventDespatcher.RegisterUserLetterListener(sender)
 	go roomservice.Run()
 
 	upgrader := &websocket.Upgrader{
@@ -73,8 +73,16 @@ func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
 			return
 		}
 		if typ == websocket.BinaryMessage {
-
-			str := string(data)
+			str:=""
+			strc:=&pb.Message{}
+			err := proto.Unmarshal(data,strc)
+			if err !=nil{
+				t.Fatal("cant marshaled bytes")
+			}
+			switch strc.Content.(type) {
+			case *pb.Message_Letter:
+				str=strc.GetLetter().Message
+			}
 
 			if str != "deneme123" {
 				readedString <- str
@@ -93,8 +101,8 @@ func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
 	_ = c.WriteMessage(websocket.BinaryMessage, bytes)
 
 	message := &pb.UserMessage{
-		Content: &pb.UserMessage_ClientMessage{
-			ClientMessage: &pb.ClientMessage{
+		Content: &pb.UserMessage_Letter{
+			Letter: &pb.Letter{
 				Message: "deneme123",
 			},
 		},

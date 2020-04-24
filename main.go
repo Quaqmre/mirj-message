@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/Quaqmre/mırjmessage/communication"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/Quaqmre/mırjmessage/logger"
-	"github.com/Quaqmre/mırjmessage/room"
 	"github.com/Quaqmre/mırjmessage/user"
 	"github.com/gorilla/websocket"
 )
@@ -14,12 +14,12 @@ import (
 func main() {
 	loggerService := logger.NewLogger(os.Stderr)
 	userServce := user.NewUserService(loggerService)
-	rm := room.NewRoom("deneme", userServce)
+	rm := communication.NewRoom("deneme", userServce)
 
 	// first handler for each event
-	sender := room.NewSender(rm)
+	sender := communication.NewSender(rm)
 	rm.EventDespatcher.RegisterUserConnectedListener(sender)
-	rm.EventDespatcher.RegisterUserInputListener(sender)
+	rm.EventDespatcher.RegisterUserLetterListener(sender)
 
 	upgrader := &websocket.Upgrader{
 		ReadBufferSize:  1024,

@@ -34,8 +34,8 @@ func main() {
 
 	_ = c.WriteMessage(websocket.BinaryMessage, bytes)
 
-	userMessage := &pb.UserMessage_ClientMessage{
-		ClientMessage: &pb.ClientMessage{
+	userMessage := &pb.UserMessage_Letter{
+		Letter: &pb.Letter{
 			Message: "selam babalık",
 		},
 	}

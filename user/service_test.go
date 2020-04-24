@@ -15,7 +15,6 @@ import (
 func TestNewUser(t *testing.T) {
 	var mockedlogger logger.Service = mock.NewMockedLogger()
 	var u *UserService = newUserService(mockedlogger)
-	
 	tests:=[]struct{
 		name string
 		input string

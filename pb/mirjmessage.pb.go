@@ -7,11 +7,12 @@
 package pb
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -25,51 +26,117 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type ClientInput int32
+type Input int32
 
 const (
-	ClientInput_LSROOM ClientInput = 0
-	ClientInput_LSUSER ClientInput = 1
+	Input_LSROOM Input = 0
+	Input_LSUSER Input = 1
 )
 
-// Enum value maps for ClientInput.
+// Enum value maps for Input.
 var (
-	ClientInput_name = map[int32]string{
+	Input_name = map[int32]string{
 		0: "LSROOM",
 		1: "LSUSER",
 	}
-	ClientInput_value = map[string]int32{
+	Input_value = map[string]int32{
 		"LSROOM": 0,
 		"LSUSER": 1,
 	}
 )
 
-func (x ClientInput) Enum() *ClientInput {
-	p := new(ClientInput)
+func (x Input) Enum() *Input {
+	p := new(Input)
 	*p = x
 	return p
 }
 
-func (x ClientInput) String() string {
+func (x Input) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (ClientInput) Descriptor() protoreflect.EnumDescriptor {
+func (Input) Descriptor() protoreflect.EnumDescriptor {
 	return file_mirjmessage_proto_enumTypes[0].Descriptor()
 }
 
-func (ClientInput) Type() protoreflect.EnumType {
+func (Input) Type() protoreflect.EnumType {
 	return &file_mirjmessage_proto_enumTypes[0]
 }
 
-func (x ClientInput) Number() protoreflect.EnumNumber {
+func (x Input) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use ClientInput.Descriptor instead.
-func (ClientInput) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use Input.Descriptor instead.
+func (Input) EnumDescriptor() ([]byte, []int) {
 	return file_mirjmessage_proto_rawDescGZIP(), []int{0}
 }
+
+type Message struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Content:
+	//	*Message_Letter
+	Content isMessage_Content `protobuf_oneof:"content"`
+}
+
+func (x *Message) Reset() {
+	*x = Message{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mirjmessage_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Message) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Message) ProtoMessage() {}
+
+func (x *Message) ProtoReflect() protoreflect.Message {
+	mi := &file_mirjmessage_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Message.ProtoReflect.Descriptor instead.
+func (*Message) Descriptor() ([]byte, []int) {
+	return file_mirjmessage_proto_rawDescGZIP(), []int{0}
+}
+
+func (m *Message) GetContent() isMessage_Content {
+	if m != nil {
+		return m.Content
+	}
+	return nil
+}
+
+func (x *Message) GetLetter() *Letter {
+	if x, ok := x.GetContent().(*Message_Letter); ok {
+		return x.Letter
+	}
+	return nil
+}
+
+type isMessage_Content interface {
+	isMessage_Content()
+}
+
+type Message_Letter struct {
+	Letter *Letter `protobuf:"bytes,1,opt,name=letter,proto3,oneof"`
+}
+
+func (*Message_Letter) isMessage_Content() {}
 
 type UserMessage struct {
 	state         protoimpl.MessageState
@@ -77,17 +144,17 @@ type UserMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Content:
-	//	*UserMessage_ClientJoin
-	//	*UserMessage_ClientLeft
-	//	*UserMessage_ClientCommand
-	//	*UserMessage_ClientMessage
+	//	*UserMessage_Join
+	//	*UserMessage_Left
+	//	*UserMessage_Command
+	//	*UserMessage_Letter
 	Content isUserMessage_Content `protobuf_oneof:"content"`
 }
 
 func (x *UserMessage) Reset() {
 	*x = UserMessage{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_mirjmessage_proto_msgTypes[0]
+		mi := &file_mirjmessage_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -100,7 +167,7 @@ func (x *UserMessage) String() string {
 func (*UserMessage) ProtoMessage() {}
 
 func (x *UserMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_mirjmessage_proto_msgTypes[0]
+	mi := &file_mirjmessage_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -113,7 +180,7 @@ func (x *UserMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserMessage.ProtoReflect.Descriptor instead.
 func (*UserMessage) Descriptor() ([]byte, []int) {
-	return file_mirjmessage_proto_rawDescGZIP(), []int{0}
+	return file_mirjmessage_proto_rawDescGZIP(), []int{1}
 }
 
 func (m *UserMessage) GetContent() isUserMessage_Content {
@@ -123,30 +190,30 @@ func (m *UserMessage) GetContent() isUserMessage_Content {
 	return nil
 }
 
-func (x *UserMessage) GetClientJoin() *ClientJoin {
-	if x, ok := x.GetContent().(*UserMessage_ClientJoin); ok {
-		return x.ClientJoin
+func (x *UserMessage) GetJoin() *Join {
+	if x, ok := x.GetContent().(*UserMessage_Join); ok {
+		return x.Join
 	}
 	return nil
 }
 
-func (x *UserMessage) GetClientLeft() *ClientLeft {
-	if x, ok := x.GetContent().(*UserMessage_ClientLeft); ok {
-		return x.ClientLeft
+func (x *UserMessage) GetLeft() *Left {
+	if x, ok := x.GetContent().(*UserMessage_Left); ok {
+		return x.Left
 	}
 	return nil
 }
 
-func (x *UserMessage) GetClientCommand() *ClientCommand {
-	if x, ok := x.GetContent().(*UserMessage_ClientCommand); ok {
-		return x.ClientCommand
+func (x *UserMessage) GetCommand() *Command {
+	if x, ok := x.GetContent().(*UserMessage_Command); ok {
+		return x.Command
 	}
 	return nil
 }
 
-func (x *UserMessage) GetClientMessage() *ClientMessage {
-	if x, ok := x.GetContent().(*UserMessage_ClientMessage); ok {
-		return x.ClientMessage
+func (x *UserMessage) GetLetter() *Letter {
+	if x, ok := x.GetContent().(*UserMessage_Letter); ok {
+		return x.Letter
 	}
 	return nil
 }
@@ -155,29 +222,29 @@ type isUserMessage_Content interface {
 	isUserMessage_Content()
 }
 
-type UserMessage_ClientJoin struct {
-	ClientJoin *ClientJoin `protobuf:"bytes,1,opt,name=clientJoin,proto3,oneof"`
+type UserMessage_Join struct {
+	Join *Join `protobuf:"bytes,1,opt,name=join,proto3,oneof"`
 }
 
-type UserMessage_ClientLeft struct {
-	ClientLeft *ClientLeft `protobuf:"bytes,2,opt,name=clientLeft,proto3,oneof"`
+type UserMessage_Left struct {
+	Left *Left `protobuf:"bytes,2,opt,name=left,proto3,oneof"`
 }
 
-type UserMessage_ClientCommand struct {
-	ClientCommand *ClientCommand `protobuf:"bytes,3,opt,name=clientCommand,proto3,oneof"`
+type UserMessage_Command struct {
+	Command *Command `protobuf:"bytes,3,opt,name=command,proto3,oneof"`
 }
 
-type UserMessage_ClientMessage struct {
-	ClientMessage *ClientMessage `protobuf:"bytes,4,opt,name=clientMessage,proto3,oneof"`
+type UserMessage_Letter struct {
+	Letter *Letter `protobuf:"bytes,4,opt,name=letter,proto3,oneof"`
 }
 
-func (*UserMessage_ClientJoin) isUserMessage_Content() {}
+func (*UserMessage_Join) isUserMessage_Content() {}
 
-func (*UserMessage_ClientLeft) isUserMessage_Content() {}
+func (*UserMessage_Left) isUserMessage_Content() {}
 
-func (*UserMessage_ClientCommand) isUserMessage_Content() {}
+func (*UserMessage_Command) isUserMessage_Content() {}
 
-func (*UserMessage_ClientMessage) isUserMessage_Content() {}
+func (*UserMessage_Letter) isUserMessage_Content() {}
 
 type Singin struct {
 	state         protoimpl.MessageState
@@ -191,7 +258,7 @@ type Singin struct {
 func (x *Singin) Reset() {
 	*x = Singin{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_mirjmessage_proto_msgTypes[1]
+		mi := &file_mirjmessage_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -204,7 +271,7 @@ func (x *Singin) String() string {
 func (*Singin) ProtoMessage() {}
 
 func (x *Singin) ProtoReflect() protoreflect.Message {
-	mi := &file_mirjmessage_proto_msgTypes[1]
+	mi := &file_mirjmessage_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -217,7 +284,7 @@ func (x *Singin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Singin.ProtoReflect.Descriptor instead.
 func (*Singin) Descriptor() ([]byte, []int) {
-	return file_mirjmessage_proto_rawDescGZIP(), []int{1}
+	return file_mirjmessage_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Singin) GetName() string {
@@ -234,7 +301,7 @@ func (x *Singin) GetPassword() string {
 	return ""
 }
 
-type ClientJoin struct {
+type Join struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -243,60 +310,8 @@ type ClientJoin struct {
 	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 }
 
-func (x *ClientJoin) Reset() {
-	*x = ClientJoin{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_mirjmessage_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ClientJoin) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ClientJoin) ProtoMessage() {}
-
-func (x *ClientJoin) ProtoReflect() protoreflect.Message {
-	mi := &file_mirjmessage_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ClientJoin.ProtoReflect.Descriptor instead.
-func (*ClientJoin) Descriptor() ([]byte, []int) {
-	return file_mirjmessage_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ClientJoin) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *ClientJoin) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-type ClientLeft struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *ClientLeft) Reset() {
-	*x = ClientLeft{}
+func (x *Join) Reset() {
+	*x = Join{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_mirjmessage_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -304,13 +319,13 @@ func (x *ClientLeft) Reset() {
 	}
 }
 
-func (x *ClientLeft) String() string {
+func (x *Join) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClientLeft) ProtoMessage() {}
+func (*Join) ProtoMessage() {}
 
-func (x *ClientLeft) ProtoReflect() protoreflect.Message {
+func (x *Join) ProtoReflect() protoreflect.Message {
 	mi := &file_mirjmessage_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -322,21 +337,33 @@ func (x *ClientLeft) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClientLeft.ProtoReflect.Descriptor instead.
-func (*ClientLeft) Descriptor() ([]byte, []int) {
+// Deprecated: Use Join.ProtoReflect.Descriptor instead.
+func (*Join) Descriptor() ([]byte, []int) {
 	return file_mirjmessage_proto_rawDescGZIP(), []int{3}
 }
 
-type ClientMessage struct {
+func (x *Join) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Join) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type Left struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (x *ClientMessage) Reset() {
-	*x = ClientMessage{}
+func (x *Left) Reset() {
+	*x = Left{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_mirjmessage_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -344,13 +371,13 @@ func (x *ClientMessage) Reset() {
 	}
 }
 
-func (x *ClientMessage) String() string {
+func (x *Left) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClientMessage) ProtoMessage() {}
+func (*Left) ProtoMessage() {}
 
-func (x *ClientMessage) ProtoReflect() protoreflect.Message {
+func (x *Left) ProtoReflect() protoreflect.Message {
 	mi := &file_mirjmessage_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -362,28 +389,21 @@ func (x *ClientMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClientMessage.ProtoReflect.Descriptor instead.
-func (*ClientMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use Left.ProtoReflect.Descriptor instead.
+func (*Left) Descriptor() ([]byte, []int) {
 	return file_mirjmessage_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ClientMessage) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-type ClientCommand struct {
+type Letter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ClientInput ClientInput `protobuf:"varint,1,opt,name=clientInput,proto3,enum=mirjmessage.ClientInput" json:"clientInput,omitempty"`
+	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (x *ClientCommand) Reset() {
-	*x = ClientCommand{}
+func (x *Letter) Reset() {
+	*x = Letter{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_mirjmessage_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -391,13 +411,13 @@ func (x *ClientCommand) Reset() {
 	}
 }
 
-func (x *ClientCommand) String() string {
+func (x *Letter) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClientCommand) ProtoMessage() {}
+func (*Letter) ProtoMessage() {}
 
-func (x *ClientCommand) ProtoReflect() protoreflect.Message {
+func (x *Letter) ProtoReflect() protoreflect.Message {
 	mi := &file_mirjmessage_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -409,16 +429,63 @@ func (x *ClientCommand) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClientCommand.ProtoReflect.Descriptor instead.
-func (*ClientCommand) Descriptor() ([]byte, []int) {
+// Deprecated: Use Letter.ProtoReflect.Descriptor instead.
+func (*Letter) Descriptor() ([]byte, []int) {
 	return file_mirjmessage_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ClientCommand) GetClientInput() ClientInput {
+func (x *Letter) GetMessage() string {
 	if x != nil {
-		return x.ClientInput
+		return x.Message
 	}
-	return ClientInput_LSROOM
+	return ""
+}
+
+type Command struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Input Input `protobuf:"varint,1,opt,name=Input,proto3,enum=mirjmessage.Input" json:"Input,omitempty"`
+}
+
+func (x *Command) Reset() {
+	*x = Command{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mirjmessage_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Command) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Command) ProtoMessage() {}
+
+func (x *Command) ProtoReflect() protoreflect.Message {
+	mi := &file_mirjmessage_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Command.ProtoReflect.Descriptor instead.
+func (*Command) Descriptor() ([]byte, []int) {
+	return file_mirjmessage_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Command) GetInput() Input {
+	if x != nil {
+		return x.Input
+	}
+	return Input_LSROOM
 }
 
 var File_mirjmessage_proto protoreflect.FileDescriptor
@@ -426,43 +493,40 @@ var File_mirjmessage_proto protoreflect.FileDescriptor
 var file_mirjmessage_proto_rawDesc = []byte{
 	0x0a, 0x11, 0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x12, 0x0b, 0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x22, 0x96, 0x02, 0x0a, 0x0b, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x12, 0x39, 0x0a, 0x0a, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4a, 0x6f, 0x69, 0x6e, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61,
-	0x67, 0x65, 0x2e, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4a, 0x6f, 0x69, 0x6e, 0x48, 0x00, 0x52,
-	0x0a, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4a, 0x6f, 0x69, 0x6e, 0x12, 0x39, 0x0a, 0x0a, 0x63,
-	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4c, 0x65, 0x66, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x17, 0x2e, 0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x43, 0x6c,
-	0x69, 0x65, 0x6e, 0x74, 0x4c, 0x65, 0x66, 0x74, 0x48, 0x00, 0x52, 0x0a, 0x63, 0x6c, 0x69, 0x65,
-	0x6e, 0x74, 0x4c, 0x65, 0x66, 0x74, 0x12, 0x42, 0x0a, 0x0d, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74,
-	0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e,
-	0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x43, 0x6c, 0x69, 0x65,
-	0x6e, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x48, 0x00, 0x52, 0x0d, 0x63, 0x6c, 0x69,
-	0x65, 0x6e, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x42, 0x0a, 0x0d, 0x63, 0x6c,
-	0x69, 0x65, 0x6e, 0x74, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x1a, 0x2e, 0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e,
-	0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x00, 0x52,
-	0x0d, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x42, 0x09,
-	0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0x38, 0x0a, 0x06, 0x53, 0x69, 0x6e,
-	0x67, 0x69, 0x6e, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77,
-	0x6f, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77,
-	0x6f, 0x72, 0x64, 0x22, 0x3c, 0x0a, 0x0a, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4a, 0x6f, 0x69,
-	0x6e, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72,
-	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72,
-	0x64, 0x22, 0x0c, 0x0a, 0x0a, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4c, 0x65, 0x66, 0x74, 0x22,
-	0x29, 0x0a, 0x0d, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x4b, 0x0a, 0x0d, 0x43, 0x6c,
-	0x69, 0x65, 0x6e, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x3a, 0x0a, 0x0b, 0x63,
-	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e,
-	0x32, 0x18, 0x2e, 0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x43,
-	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x52, 0x0b, 0x63, 0x6c, 0x69, 0x65,
-	0x6e, 0x74, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x2a, 0x25, 0x0a, 0x0b, 0x43, 0x6c, 0x69, 0x65, 0x6e,
-	0x74, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x12, 0x0a, 0x0a, 0x06, 0x4c, 0x53, 0x52, 0x4f, 0x4f, 0x4d,
-	0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x4c, 0x53, 0x55, 0x53, 0x45, 0x52, 0x10, 0x01, 0x42, 0x04,
-	0x5a, 0x02, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x43, 0x0a, 0x07, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x2d, 0x0a, 0x06, 0x6c,
+	0x65, 0x74, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x6d, 0x69,
+	0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x4c, 0x65, 0x74, 0x74, 0x65, 0x72,
+	0x48, 0x00, 0x52, 0x06, 0x6c, 0x65, 0x74, 0x74, 0x65, 0x72, 0x42, 0x09, 0x0a, 0x07, 0x63, 0x6f,
+	0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0xcb, 0x01, 0x0a, 0x0b, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x27, 0x0a, 0x04, 0x6a, 0x6f, 0x69, 0x6e, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x6d, 0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x04, 0x6a, 0x6f, 0x69, 0x6e, 0x12, 0x27,
+	0x0a, 0x04, 0x6c, 0x65, 0x66, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x6d,
+	0x69, 0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x4c, 0x65, 0x66, 0x74, 0x48,
+	0x00, 0x52, 0x04, 0x6c, 0x65, 0x66, 0x74, 0x12, 0x30, 0x0a, 0x07, 0x63, 0x6f, 0x6d, 0x6d, 0x61,
+	0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x6d, 0x69, 0x72, 0x6a, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x48, 0x00,
+	0x52, 0x07, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x2d, 0x0a, 0x06, 0x6c, 0x65, 0x74,
+	0x74, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x6d, 0x69, 0x72, 0x6a,
+	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x4c, 0x65, 0x74, 0x74, 0x65, 0x72, 0x48, 0x00,
+	0x52, 0x06, 0x6c, 0x65, 0x74, 0x74, 0x65, 0x72, 0x42, 0x09, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74,
+	0x65, 0x6e, 0x74, 0x22, 0x38, 0x0a, 0x06, 0x53, 0x69, 0x6e, 0x67, 0x69, 0x6e, 0x12, 0x12, 0x0a,
+	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
+	0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x36, 0x0a,
+	0x04, 0x4a, 0x6f, 0x69, 0x6e, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73,
+	0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73,
+	0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x06, 0x0a, 0x04, 0x4c, 0x65, 0x66, 0x74, 0x22, 0x22, 0x0a,
+	0x06, 0x4c, 0x65, 0x74, 0x74, 0x65, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x22, 0x33, 0x0a, 0x07, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x28, 0x0a, 0x05,
+	0x49, 0x6e, 0x70, 0x75, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x12, 0x2e, 0x6d, 0x69,
+	0x72, 0x6a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x52,
+	0x05, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x2a, 0x1f, 0x0a, 0x05, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x12,
+	0x0a, 0x0a, 0x06, 0x4c, 0x53, 0x52, 0x4f, 0x4f, 0x4d, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x4c,
+	0x53, 0x55, 0x53, 0x45, 0x52, 0x10, 0x01, 0x42, 0x04, 0x5a, 0x02, 0x70, 0x62, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -478,27 +542,29 @@ func file_mirjmessage_proto_rawDescGZIP() []byte {
 }
 
 var file_mirjmessage_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_mirjmessage_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_mirjmessage_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_mirjmessage_proto_goTypes = []interface{}{
-	(ClientInput)(0),      // 0: mirjmessage.ClientInput
-	(*UserMessage)(nil),   // 1: mirjmessage.UserMessage
-	(*Singin)(nil),        // 2: mirjmessage.Singin
-	(*ClientJoin)(nil),    // 3: mirjmessage.ClientJoin
-	(*ClientLeft)(nil),    // 4: mirjmessage.ClientLeft
-	(*ClientMessage)(nil), // 5: mirjmessage.ClientMessage
-	(*ClientCommand)(nil), // 6: mirjmessage.ClientCommand
+	(Input)(0),          // 0: mirjmessage.Input
+	(*Message)(nil),     // 1: mirjmessage.Message
+	(*UserMessage)(nil), // 2: mirjmessage.UserMessage
+	(*Singin)(nil),      // 3: mirjmessage.Singin
+	(*Join)(nil),        // 4: mirjmessage.Join
+	(*Left)(nil),        // 5: mirjmessage.Left
+	(*Letter)(nil),      // 6: mirjmessage.Letter
+	(*Command)(nil),     // 7: mirjmessage.Command
 }
 var file_mirjmessage_proto_depIdxs = []int32{
-	3, // 0: mirjmessage.UserMessage.clientJoin:type_name -> mirjmessage.ClientJoin
-	4, // 1: mirjmessage.UserMessage.clientLeft:type_name -> mirjmessage.ClientLeft
-	6, // 2: mirjmessage.UserMessage.clientCommand:type_name -> mirjmessage.ClientCommand
-	5, // 3: mirjmessage.UserMessage.clientMessage:type_name -> mirjmessage.ClientMessage
-	0, // 4: mirjmessage.ClientCommand.clientInput:type_name -> mirjmessage.ClientInput
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	6, // 0: mirjmessage.Message.letter:type_name -> mirjmessage.Letter
+	4, // 1: mirjmessage.UserMessage.join:type_name -> mirjmessage.Join
+	5, // 2: mirjmessage.UserMessage.left:type_name -> mirjmessage.Left
+	7, // 3: mirjmessage.UserMessage.command:type_name -> mirjmessage.Command
+	6, // 4: mirjmessage.UserMessage.letter:type_name -> mirjmessage.Letter
+	0, // 5: mirjmessage.Command.Input:type_name -> mirjmessage.Input
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_mirjmessage_proto_init() }
@@ -508,7 +574,7 @@ func file_mirjmessage_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_mirjmessage_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UserMessage); i {
+			switch v := v.(*Message); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -520,7 +586,7 @@ func file_mirjmessage_proto_init() {
 			}
 		}
 		file_mirjmessage_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Singin); i {
+			switch v := v.(*UserMessage); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -532,7 +598,7 @@ func file_mirjmessage_proto_init() {
 			}
 		}
 		file_mirjmessage_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientJoin); i {
+			switch v := v.(*Singin); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -544,7 +610,7 @@ func file_mirjmessage_proto_init() {
 			}
 		}
 		file_mirjmessage_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientLeft); i {
+			switch v := v.(*Join); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -556,7 +622,7 @@ func file_mirjmessage_proto_init() {
 			}
 		}
 		file_mirjmessage_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientMessage); i {
+			switch v := v.(*Left); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -568,7 +634,19 @@ func file_mirjmessage_proto_init() {
 			}
 		}
 		file_mirjmessage_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientCommand); i {
+			switch v := v.(*Letter); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_mirjmessage_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Command); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -581,10 +659,13 @@ func file_mirjmessage_proto_init() {
 		}
 	}
 	file_mirjmessage_proto_msgTypes[0].OneofWrappers = []interface{}{
-		(*UserMessage_ClientJoin)(nil),
-		(*UserMessage_ClientLeft)(nil),
-		(*UserMessage_ClientCommand)(nil),
-		(*UserMessage_ClientMessage)(nil),
+		(*Message_Letter)(nil),
+	}
+	file_mirjmessage_proto_msgTypes[1].OneofWrappers = []interface{}{
+		(*UserMessage_Join)(nil),
+		(*UserMessage_Left)(nil),
+		(*UserMessage_Command)(nil),
+		(*UserMessage_Letter)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -592,7 +673,7 @@ func file_mirjmessage_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_mirjmessage_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

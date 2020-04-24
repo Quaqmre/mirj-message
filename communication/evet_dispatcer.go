@@ -1,22 +1,17 @@
-package room
+package communication
 
 import (
+	"github.com/Quaqmre/mırjmessage/events"
 	"time"
-
-	"github.com/Quaqmre/mırjmessage/pb"
 )
 
-type UserConnected struct {
-	ClientID int32
-	Name     string
-}
 
 type UserConnectedListener interface {
-	HandleUserConnected(*UserConnected)
+	HandleUserConnected(*events.UserConnected)
 }
 
 type userConnectedHandler struct {
-	event          *UserConnected
+	event          *events.UserConnected
 	eventListeners []UserConnectedListener
 }
 
@@ -26,18 +21,18 @@ func (handler *userConnectedHandler) handle() {
 	}
 }
 
-type UserInputListener interface {
-	HandleUserInput(*pb.UserMessage)
+type UserLetterListener interface {
+	HandleUserLetter(letter *events.SendLetter)
 }
 
-type userInputHandler struct {
-	event          *pb.UserMessage
-	eventListeners []UserInputListener
+type userLetterHandler struct {
+	event          *events.SendLetter
+	eventListeners []UserLetterListener
 }
 
-func (handler *userInputHandler) handle() {
+func (handler *userLetterHandler) handle() {
 	for _, listener := range handler.eventListeners {
-		listener.HandleUserInput(handler.event)
+		listener.HandleUserLetter(handler.event)
 	}
 }
 
@@ -55,7 +50,7 @@ type EventDispatcher struct {
 	// LISTENER LISTS
 
 	userConnectedListeners []UserConnectedListener
-	userInputListener      []UserInputListener
+	userInputListener      []UserLetterListener
 }
 
 func NewEventDispatcher() *EventDispatcher {
@@ -86,7 +81,7 @@ func (dispatcher *EventDispatcher) RunEventLoop() {
 	}
 }
 
-func (dispatcher *EventDispatcher) FireUserConnected(event *UserConnected) {
+func (dispatcher *EventDispatcher) FireUserConnected(event *events.UserConnected) {
 	handler := &userConnectedHandler{
 		event:          event,
 		eventListeners: dispatcher.userConnectedListeners,
@@ -98,8 +93,8 @@ func (dispatcher *EventDispatcher) FireUserConnected(event *UserConnected) {
 func (dispatcher *EventDispatcher) RegisterUserConnectedListener(listener UserConnectedListener) {
 	dispatcher.userConnectedListeners = append(dispatcher.userConnectedListeners, listener)
 }
-func (dispatcher *EventDispatcher) FireUserInput(event *pb.UserMessage) {
-	handler := &userInputHandler{
+func (dispatcher *EventDispatcher) FireUserLetter(event *events.SendLetter) {
+	handler := &userLetterHandler{
 		event:          event,
 		eventListeners: dispatcher.userInputListener,
 	}
@@ -107,6 +102,6 @@ func (dispatcher *EventDispatcher) FireUserInput(event *pb.UserMessage) {
 	dispatcher.priority1EventsQueue <- handler
 }
 
-func (dispatcher *EventDispatcher) RegisterUserInputListener(listener UserInputListener) {
+func (dispatcher *EventDispatcher) RegisterUserLetterListener(listener UserLetterListener) {
 	dispatcher.userInputListener = append(dispatcher.userInputListener, listener)
 }
