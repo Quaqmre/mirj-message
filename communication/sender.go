@@ -21,8 +21,9 @@ func NewSender(server *Room) *Sender {
 
 // HandleUserConnected test
 func (sender *Sender) HandleUserConnected(userConnectedEvent *events.UserConnected) {
-	message := fmt.Sprintf("%s connected", userConnectedEvent.Name)
-	sender.server.broadcastMessageWithIgnored(message, userConnectedEvent.ClientID)
+	text := fmt.Sprintf("%s connected", userConnectedEvent.Name)
+	message := &pb.Message{Content: &pb.Message_Letter{Letter: &pb.Letter{Message: text}}}
+	sender.server.SendToAllClientsWithIgnored(message)
 
 	// sender.server.broadcastMessage(fmt.Sprintf("%s-%v user connected server", userConnectedEvent.Name, userConnectedEvent.ClientID))
 }
@@ -30,5 +31,5 @@ func (sender *Sender) HandleUserConnected(userConnectedEvent *events.UserConnect
 // HandleUserInput test
 func (sender *Sender) HandleUserLetter(userLettertedEvent *events.SendLetter) {
 	message := &pb.Message{Content: &pb.Message_Letter{Letter: userLettertedEvent.Letter}}
-	sender.server.SendToAllClients(message)
+	sender.server.SendToAllClientsWithIgnored(message)
 }

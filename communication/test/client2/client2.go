@@ -56,7 +56,7 @@ func main() {
 			err := proto.Unmarshal(data, mes)
 
 			if err != nil {
-				panic("cant unmarshal")
+				log.Println("fatal when un marshal")
 			}
 			switch mes.Content.(type) {
 			case *pb.Message_Letter:

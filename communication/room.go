@@ -38,7 +38,7 @@ func NewRoom(name string, u user.Service, logger logger.Service) *Room {
 	return &Room{
 		Name:             name,
 		userService:      u,
-		AddClientChan:    make(chan *websocket.Conn),
+		AddClientChan:    make(chan *websocket.Conn, 100),
 		RemoveClientChan: make(chan Client),
 		BroadcastChan:    make(chan string),
 		EventDespatcher:  NewEventDispatcher(),
@@ -153,16 +153,20 @@ func (r *Room) SendToAllClients(message *pb.Message) {
 	}
 }
 func (r *Room) SendToAllClientsWithIgnored(message *pb.Message, clientIds ...int32) {
+	ignored := make(map[int32]bool)
+
+	for _, id := range clientIds {
+		ignored[id] = true
+	}
+
 	bytes, err := proto.Marshal(message)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, c := range r.Clients {
-		for _, id := range clientIds {
-			if c.UserID != id {
-				c.SendMessage(&bytes)
-			}
+		if _, ok := ignored[c.UserID]; !ok {
+			c.SendMessage(&bytes)
 		}
 	}
 }
@@ -171,26 +175,26 @@ func (r *Room) SendToAllClientsWithIgnored(message *pb.Message, clientIds ...int
 
 // broadcastMessage sends a message to all client conns in the pool
 func (r *Room) broadcastMessage(s string) {
-	log.Println("will send meesage broad cast :" + s)
-	for _, client := range r.Clients {
-		err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
-		if err != nil {
-			log.Println("cant send a client:" + string(client.UserID))
-		}
-	}
+	// log.Println("will send meesage broad cast :" + s)
+	// for _, client := range r.Clients {
+	// 	err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
+	// 	if err != nil {
+	// 		log.Println("cant send a client:" + string(client.UserID))
+	// 	}
+	// }
 }
 
 // broadcastMessageWithIgnored sends a message to all client conns in the pool
 func (r *Room) broadcastMessageWithIgnored(s string, id ...int32) {
-	log.Println("will send meesage broad cast :" + s)
-	for _, client := range r.Clients {
-		for _, i := range id {
-			if client.UserID != i {
-				err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
-				if err != nil {
-					r.logger.Fatal(("cant send a client:" + string(client.UserID)))
-				}
-			}
-		}
-	}
+	// log.Println("will send meesage broad cast :" + s)
+	// for _, client := range r.Clients {
+	// 	for _, i := range id {
+	// 		if client.UserID != i {
+	// 			err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
+	// 			if err != nil {
+	// 				r.logger.Fatal(("cant send a client:" + string(client.UserID)))
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
