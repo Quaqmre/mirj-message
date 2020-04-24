@@ -3,6 +3,7 @@ package communication
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/Quaqmre/mırjmessage/events"
@@ -57,7 +58,7 @@ func NewClient(ip string, con *websocket.Conn, userID int32, room *Room) (*Clien
 		Context:       ctx,
 		cancelContext: cancel,
 		server:        room,
-		ch:            make(chan *[]byte),
+		ch:            make(chan *[]byte, 100),
 	}
 
 	return client, nil
@@ -68,7 +69,7 @@ func (c *Client) SendMessage(bytes *[]byte) {
 	select {
 	case c.ch <- bytes:
 	default:
-		log.Fatal("it is dropped message I guess :D")
+		c.server.logger.Fatal("it is dropped message I guess :D")
 	}
 }
 
@@ -105,8 +106,9 @@ func (c *Client) readFromWebSocket() {
 	typ, data, err := c.Con.ReadMessage()
 
 	if err != nil {
-		log.Fatalf("when reading message get error from:%v", c.UserID)
+		c.server.logger.Fatal(fmt.Sprintf("when reading message get error from:%v", c.UserID))
 		c.cancelContext()
+		c.server.RemoveClientChan <- *c
 		return
 	}
 
@@ -124,7 +126,7 @@ func (c *Client) readFromWebSocket() {
 func (c *Client) unmarshalUserInput(data []byte) {
 	protoUserMessage := &pb.UserMessage{}
 	if err := proto.Unmarshal(data, protoUserMessage); err != nil {
-		log.Fatalln("Failed to unmarshal UserInput:", err)
+		c.server.logger.Fatal("Failed to unmarshal UserInput:", err)
 		return
 	}
 
@@ -150,7 +152,7 @@ func (c *Client) listenWrite() {
 
 			if err != nil {
 				//ert.Wrapf(err,fmt.Sprintf("cant send a client:%v" ,c.UserID))
-				log.Fatalf("cant send a client:%v err:%s", c.UserID, err.Error())
+				c.server.logger.Fatal(fmt.Sprintf("cant send a client:%v err:%s", c.UserID, err.Error()))
 			}
 		case <-c.Context.Done():
 			return

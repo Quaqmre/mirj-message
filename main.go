@@ -14,7 +14,7 @@ import (
 func main() {
 	loggerService := logger.NewLogger(os.Stderr)
 	userServce := user.NewUserService(loggerService)
-	rm := communication.NewRoom("deneme", userServce)
+	rm := communication.NewRoom("deneme", userServce,loggerService)
 
 	// first handler for each event
 	sender := communication.NewSender(rm)

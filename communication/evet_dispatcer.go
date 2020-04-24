@@ -1,10 +1,10 @@
 package communication
 
 import (
-	"github.com/Quaqmre/mırjmessage/events"
 	"time"
-)
 
+	"github.com/Quaqmre/mırjmessage/events"
+)
 
 type UserConnectedListener interface {
 	HandleUserConnected(*events.UserConnected)
@@ -76,7 +76,7 @@ func (dispatcher *EventDispatcher) RunEventLoop() {
 			handler.handle()
 
 		default:
-			time.Sleep(time.Millisecond * 1500)
+			time.Sleep(time.Millisecond * 150)
 		}
 	}
 }

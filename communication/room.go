@@ -1,11 +1,14 @@
 package communication
 
 import (
-	"github.com/Quaqmre/mırjmessage/pb"
-	"github.com/Quaqmre/mırjmessage/events"
+	"fmt"
 	"log"
-	"github.com/golang/protobuf/proto"
+
+	"github.com/Quaqmre/mırjmessage/events"
+	"github.com/Quaqmre/mırjmessage/logger"
+	"github.com/Quaqmre/mırjmessage/pb"
 	"github.com/Quaqmre/mırjmessage/user"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
 
@@ -24,11 +27,12 @@ type Room struct {
 	BroadcastChan    chan string
 	// clientService    *client.Service
 	userService     user.Service
+	logger          logger.Service
 	EventDespatcher *EventDispatcher
 }
 
 // NewRoom give back new chatroom
-func NewRoom(name string, u user.Service) *Room {
+func NewRoom(name string, u user.Service, logger logger.Service) *Room {
 	log.Println("new room Created")
 	// clientService := client.NewService()
 	return &Room{
@@ -39,6 +43,7 @@ func NewRoom(name string, u user.Service) *Room {
 		BroadcastChan:    make(chan string),
 		EventDespatcher:  NewEventDispatcher(),
 		Clients:          make(map[string]*Client),
+		logger:           logger,
 	}
 }
 
@@ -62,8 +67,7 @@ func (r *Room) Run() {
 			}()
 
 		case c := <-r.RemoveClientChan:
-			c.Done()
-			_ = c
+			delete(c.server.Clients, c.ClientIp)
 		case m := <-r.BroadcastChan:
 			log.Println("get broad cast message : ", m)
 			r.broadcastMessage(m)
@@ -74,7 +78,7 @@ func (r *Room) Run() {
 func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 	defer func() {
 		if err != nil {
-			log.Fatalf("new client cant accept for:%s", err)
+			r.logger.Fatal(fmt.Sprintf("new client cant accept for:%s", err))
 		}
 	}()
 
@@ -148,21 +152,20 @@ func (r *Room) SendToAllClients(message *pb.Message) {
 		c.SendMessage(&bytes)
 	}
 }
-func (r *Room) SendToAllClientsWithIgnored(message *pb.Message,clientIds ...int32) {
+func (r *Room) SendToAllClientsWithIgnored(message *pb.Message, clientIds ...int32) {
 	bytes, err := proto.Marshal(message)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, c := range r.Clients {
-		for _,id :=range clientIds {
-			if c.UserID!=id {
+		for _, id := range clientIds {
+			if c.UserID != id {
 				c.SendMessage(&bytes)
 			}
 		}
 	}
 }
-
 
 // TODO : uniqId implementasyonuna gerek yoktu çünkü gelen ip uniq
 
@@ -172,19 +175,20 @@ func (r *Room) broadcastMessage(s string) {
 	for _, client := range r.Clients {
 		err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
 		if err != nil {
-			log.Fatalln("cant send a client:" + string(client.UserID))
+			log.Println("cant send a client:" + string(client.UserID))
 		}
 	}
 }
+
 // broadcastMessageWithIgnored sends a message to all client conns in the pool
-func (r *Room) broadcastMessageWithIgnored(s string,id ...int32) {
+func (r *Room) broadcastMessageWithIgnored(s string, id ...int32) {
 	log.Println("will send meesage broad cast :" + s)
 	for _, client := range r.Clients {
-		for _,i :=range id {
-			if client.UserID!=i {
+		for _, i := range id {
+			if client.UserID != i {
 				err := client.Con.WriteMessage(websocket.BinaryMessage, []byte(s))
 				if err != nil {
-					log.Fatalln("cant send a client:" + string(client.UserID))
+					r.logger.Fatal(("cant send a client:" + string(client.UserID)))
 				}
 			}
 		}

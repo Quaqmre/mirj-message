@@ -22,7 +22,7 @@ var mockedlogger logger.Service = mock.NewMockedLogger()
 
 var u user.Service = user.NewUserService(mockedlogger)
 
-var roomservice *Room = NewRoom("deneme", u)
+var roomservice *Room = NewRoom("deneme", u, mockedlogger)
 
 var sender *Sender = NewSender(roomservice)
 
@@ -73,15 +73,15 @@ func TestAtomic_Increase_generate_uniq_Id(t *testing.T) {
 			return
 		}
 		if typ == websocket.BinaryMessage {
-			str:=""
-			strc:=&pb.Message{}
-			err := proto.Unmarshal(data,strc)
-			if err !=nil{
+			str := ""
+			strc := &pb.Message{}
+			err := proto.Unmarshal(data, strc)
+			if err != nil {
 				t.Fatal("cant marshaled bytes")
 			}
 			switch strc.Content.(type) {
 			case *pb.Message_Letter:
-				str=strc.GetLetter().Message
+				str = strc.GetLetter().Message
 			}
 
 			if str != "deneme123" {
