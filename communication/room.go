@@ -78,7 +78,7 @@ func (r *Room) Run() {
 func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 	defer func() {
 		if err != nil {
-			r.logger.Fatal(fmt.Sprintf("new client cant accept for:%s", err))
+			r.logger.Fatal("err", fmt.Sprintf("new client cant accept for:%s", err))
 		}
 	}()
 

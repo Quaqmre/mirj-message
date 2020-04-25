@@ -21,7 +21,7 @@ func main() {
 	fmt.Println(u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("err", err)
 	}
 	newU := User{Name: "client3", Password: "test3"}
 

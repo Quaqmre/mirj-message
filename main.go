@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/Quaqmre/mırjmessage/communication"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/Quaqmre/mırjmessage/communication"
 
 	"github.com/Quaqmre/mırjmessage/logger"
 	"github.com/Quaqmre/mırjmessage/user"
@@ -14,7 +15,7 @@ import (
 func main() {
 	loggerService := logger.NewLogger(os.Stderr)
 	userServce := user.NewUserService(loggerService)
-	rm := communication.NewRoom("deneme", userServce,loggerService)
+	rm := communication.NewRoom("deneme", userServce, loggerService)
 
 	// first handler for each event
 	sender := communication.NewSender(rm)
