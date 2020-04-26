@@ -33,7 +33,7 @@ type Room struct {
 
 // NewRoom give back new chatroom
 func NewRoom(name string, u user.Service, logger logger.Service) *Room {
-	log.Println("new room Created")
+	log.Printf("new room %s Created",name)
 	// clientService := client.NewService()
 	return &Room{
 		Name:             name,
