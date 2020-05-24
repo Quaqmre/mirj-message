@@ -14,13 +14,8 @@ import (
 
 func main() {
 	loggerService := logger.NewLogger(os.Stderr)
-	userServce := user.NewUserService(loggerService)
-	rm := communication.NewRoom("deneme", userServce, loggerService)
-
-	// first handler for each event
-	sender := communication.NewSender(rm)
-	rm.EventDespatcher.RegisterUserConnectedListener(sender)
-	rm.EventDespatcher.RegisterUserLetterListener(sender)
+	userService := user.NewUserService(loggerService)
+	server := communication.NewServer(loggerService, userService)
 
 	upgrader := &websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -36,10 +31,9 @@ func main() {
 			return
 		}
 
-		rm.AddClientChan <- conn
+		server.Rooms["default"].AddClientChan <- conn
 		log.Println("Added new client. Now", "clients connected.")
 	}
-	go rm.Run()
 
 	http.HandleFunc("/", handler)
 	log.Println("Server running...")

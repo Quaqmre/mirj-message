@@ -27,7 +27,7 @@ type Client struct {
 	ch            chan *[]byte
 	Context       context.Context
 	cancelContext context.CancelFunc
-	server        *Room
+	room          *Room
 }
 
 // // NewService make interface of client service
@@ -57,7 +57,7 @@ func NewClient(ip string, con *websocket.Conn, userID int32, room *Room) (*Clien
 		Key:           con.LocalAddr().String(),
 		Context:       ctx,
 		cancelContext: cancel,
-		server:        room,
+		room:          room,
 		ch:            make(chan *[]byte, 100),
 	}
 
@@ -69,7 +69,7 @@ func (c *Client) SendMessage(bytes *[]byte) {
 	select {
 	case c.ch <- bytes:
 	default:
-		c.server.logger.Fatal("err:", "it is dropped message I guess :D")
+		c.room.logger.Fatal("err:", "it is dropped message I guess :D")
 	}
 }
 
@@ -95,6 +95,13 @@ func (c *Client) listenRead() {
 		select {
 		case <-c.Context.Done():
 			log.Println(string(c.UserID) + "connectin canceled I cant read any more")
+			user := c.room.userService.Get(c.UserID)
+			qEvent := events.UserQuit{
+				ClientID: c.UserID,
+				Name:     user.Name,
+				Key:      c.ClientIp,
+			}
+			c.room.EventDespatcher.FireUserQuit(&qEvent)
 			return
 		default:
 			c.readFromWebSocket()
@@ -106,9 +113,8 @@ func (c *Client) readFromWebSocket() {
 	typ, data, err := c.Con.ReadMessage()
 
 	if err != nil {
-		c.server.logger.Fatal("err:", fmt.Sprintf("when reading message get error from:%v", c.UserID))
+		c.room.logger.Fatal("err:", fmt.Sprintf("when reading message get error from:%v", c.UserID))
 		c.cancelContext()
-		c.server.RemoveClientChan <- *c
 		return
 	}
 
@@ -126,7 +132,7 @@ func (c *Client) readFromWebSocket() {
 func (c *Client) unmarshalUserInput(data []byte) {
 	protoUserMessage := &pb.UserMessage{}
 	if err := proto.Unmarshal(data, protoUserMessage); err != nil {
-		c.server.logger.Fatal("err", fmt.Sprintf("Failed to unmarshal UserInput:%s", err))
+		c.room.logger.Fatal("err", fmt.Sprintf("Failed to unmarshal UserInput:%s", err))
 		return
 	}
 
@@ -134,7 +140,7 @@ func (c *Client) unmarshalUserInput(data []byte) {
 	case *pb.UserMessage_Letter:
 		userletter := protoUserMessage.GetLetter()
 		letterevent := &events.SendLetter{Letter: userletter, ClientId: c.UserID}
-		c.server.EventDespatcher.FireUserLetter(letterevent)
+		c.room.EventDespatcher.FireUserLetter(letterevent)
 	default:
 		log.Fatalf("omg %v", x)
 	}
@@ -152,7 +158,7 @@ func (c *Client) listenWrite() {
 
 			if err != nil {
 				//ert.Wrapf(err,fmt.Sprintf("cant send a client:%v" ,c.UserID))
-				c.server.logger.Fatal("err", fmt.Sprintf("cant send a client:%v err:%s", c.UserID, err.Error()))
+				c.room.logger.Fatal("err", fmt.Sprintf("cant send a client:%v err:%s", c.UserID, err.Error()))
 			}
 		case <-c.Context.Done():
 			return

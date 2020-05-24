@@ -3,6 +3,7 @@ package communication
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/Quaqmre/mırjmessage/events"
 	"github.com/Quaqmre/mırjmessage/logger"
@@ -24,23 +25,22 @@ type Room struct {
 	Clients          map[string]*Client
 	AddClientChan    chan *websocket.Conn
 	RemoveClientChan chan Client
-	BroadcastChan    chan string
 	// clientService    *client.Service
 	userService     user.Service
 	logger          logger.Service
 	EventDespatcher *EventDispatcher
+	mx              sync.RWMutex
 }
 
 // NewRoom give back new chatroom
 func NewRoom(name string, u user.Service, logger logger.Service) *Room {
-	log.Printf("new room %s Created",name)
+	log.Printf("new room %s Created", name)
 	// clientService := client.NewService()
 	return &Room{
 		Name:             name,
 		userService:      u,
 		AddClientChan:    make(chan *websocket.Conn, 100),
 		RemoveClientChan: make(chan Client),
-		BroadcastChan:    make(chan string),
 		EventDespatcher:  NewEventDispatcher(),
 		Clients:          make(map[string]*Client),
 		logger:           logger,
@@ -67,10 +67,7 @@ func (r *Room) Run() {
 			}()
 
 		case c := <-r.RemoveClientChan:
-			delete(c.server.Clients, c.ClientIp)
-		case m := <-r.BroadcastChan:
-			log.Println("get broad cast message : ", m)
-			r.broadcastMessage(m)
+			delete(c.room.Clients, c.ClientIp)
 		}
 	}
 }
@@ -108,7 +105,9 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 		if err != nil {
 			return err
 		}
+		r.mx.Lock()
 		r.Clients[cl.ClientIp] = cl
+		r.mx.Unlock()
 		event := events.UserConnected{ClientID: cl.UserID, Name: newUser.Name}
 		r.EventDespatcher.FireUserConnected(&event)
 		log.Printf("client created:%v\n", cl)
@@ -169,6 +168,12 @@ func (r *Room) SendToAllClientsWithIgnored(message *pb.Message, clientIds ...int
 			c.SendMessage(&bytes)
 		}
 	}
+}
+func (r *Room) DeleteClient(key string) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	delete(r.Clients, key)
 }
 
 // TODO : uniqId implementasyonuna gerek yoktu çünkü gelen ip uniq
