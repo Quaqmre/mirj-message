@@ -1,6 +1,7 @@
 package communication
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/Quaqmre/mırjmessage/logger"
@@ -25,7 +26,7 @@ func NewServer(logger logger.Service, user user.Service) *Server {
 	return s
 }
 func (s *Server) CreateRoom(name string) *Room {
-	rm := NewRoom(name, s.userService, s.loggerService)
+	rm := NewRoom(name, s.userService, s.loggerService, s)
 
 	// first handler for each event
 	sender := NewSender(rm)
@@ -36,4 +37,13 @@ func (s *Server) CreateRoom(name string) *Room {
 	defer s.mx.Unlock()
 	s.Rooms[name] = rm
 	return rm
+}
+
+func (s *Server) GetRooms() string {
+	list := ""
+	for i, r := range s.Rooms {
+		list = fmt.Sprintf("%s:%v,%s", i, len(r.Clients), list)
+	}
+	s.loggerService.Info("cmp", "server", "method", "GetRooms", "msg", "Rooms listed succesfuly")
+	return list
 }

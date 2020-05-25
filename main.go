@@ -31,7 +31,7 @@ func main() {
 		}
 
 		server.Rooms["default"].AddClientChan <- conn
-		loggerService.Info("cmp", "main", "method", "handler", "msg", "Added new client.")
+		loggerService.Info("cmp", "main", "method", "handler", "msg", "Added new client for default.")
 	}
 
 	http.HandleFunc("/", handler)

@@ -42,10 +42,23 @@ func main() {
 	message := &pb.UserMessage{Content: userMessage}
 
 	datam, err := proto.Marshal(message)
+	_ = datam
+	// for {
 
+	// 	time.Sleep(time.Second)
+	// 	_ = c.WriteMessage(websocket.BinaryMessage, datam)
+	// }
+	lsroom := &pb.UserMessage_Command{
+		Command: &pb.Command{
+			Input: pb.Input_LSROOM,
+		},
+	}
+	message = &pb.UserMessage{Content: lsroom}
+
+	dat, _ := proto.Marshal(message)
 	for {
 
 		time.Sleep(time.Second)
-		_ = c.WriteMessage(websocket.BinaryMessage, datam)
+		_ = c.WriteMessage(websocket.BinaryMessage, dat)
 	}
 }

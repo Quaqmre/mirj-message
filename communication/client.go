@@ -28,6 +28,7 @@ type Client struct {
 	Context       context.Context
 	cancelContext context.CancelFunc
 	room          *Room
+	server        *Server
 }
 
 // // NewService make interface of client service
@@ -48,7 +49,7 @@ type Client struct {
 
 // TODO : bir kullanıcı sadece 1 kere mi clients içinde olablir ? Yoksa geçerli olanı mı dönmek gerek
 // INFO : client servisi her room özelinde bir tane generete edilmelidir.
-func NewClient(ip string, con *websocket.Conn, userID int32, room *Room) (*Client, error) {
+func NewClient(ip string, con *websocket.Conn, userID int32, room *Room, server *Server) (*Client, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	client := &Client{
 		ClientIp:      ip,
@@ -58,6 +59,7 @@ func NewClient(ip string, con *websocket.Conn, userID int32, room *Room) (*Clien
 		Context:       ctx,
 		cancelContext: cancel,
 		room:          room,
+		server:        server,
 		ch:            make(chan *[]byte, 100),
 	}
 
@@ -141,6 +143,9 @@ func (c *Client) unmarshalUserInput(data []byte) {
 		userletter := protoUserMessage.GetLetter()
 		letterevent := &events.SendLetter{Letter: userletter, ClientId: c.UserID}
 		c.room.EventDespatcher.FireUserLetter(letterevent)
+	case *pb.UserMessage_Command:
+		commandType := protoUserMessage.GetCommand()
+		c.handleUserCommand(commandType)
 	default:
 		log.Fatalf("omg %v", x)
 	}
@@ -163,6 +168,21 @@ func (c *Client) listenWrite() {
 		case <-c.Context.Done():
 			return
 		}
+	}
+}
+func (c *Client) handleUserCommand(cmd *pb.Command) {
+	switch cmd.Input {
+	case pb.Input_LSROOM:
+		rooms := c.server.GetRooms()
+		letter := &pb.UserMessage_Letter{
+			Letter: &pb.Letter{
+				Message: rooms,
+			},
+		}
+		message := &pb.UserMessage{Content: letter}
+
+		dat, _ := proto.Marshal(message)
+		c.ch <- &dat
 	}
 }
 

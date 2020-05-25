@@ -45,26 +45,39 @@ func main() {
 		c.Close()
 		// c.Close()
 	}(ch)
-	for loopbreker {
-		select {
-		default:
-			_, data, erra := c.ReadMessage()
-			if erra != nil {
-				return
-			}
-			mes := &pb.Message{}
-			err := proto.Unmarshal(data, mes)
+	go func() {
 
-			if err != nil {
-
-				log.Println("fatal when un marshal")
-			}
-			switch mes.Content.(type) {
-			case *pb.Message_Letter:
-				fmt.Println(mes.GetLetter().Message)
+		for loopbreker {
+			select {
 			default:
-				fmt.Println(string(data))
+				_, data, erra := c.ReadMessage()
+				if erra != nil {
+					return
+				}
+				mes := &pb.Message{}
+				err := proto.Unmarshal(data, mes)
+
+				if err != nil {
+					log.Println("fatal when un marshal")
+				}
+				switch mes.Content.(type) {
+				case *pb.Message_Letter:
+					fmt.Println(mes.GetLetter().Message)
+				default:
+					fmt.Println(string(data))
+				}
 			}
 		}
+	}()
+	lsroom := &pb.UserMessage_Command{
+		Command: &pb.Command{
+			Input: pb.Input_LSROOM,
+		},
 	}
+	message := &pb.UserMessage{Content: lsroom}
+
+	dat, _ := proto.Marshal(message)
+	_ = c.WriteMessage(websocket.BinaryMessage, dat)
+	time.Sleep(time.Second * 10)
+
 }

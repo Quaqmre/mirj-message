@@ -29,10 +29,11 @@ type Room struct {
 	logger          logger.Service
 	EventDespatcher *EventDispatcher
 	mx              sync.RWMutex
+	server          *Server
 }
 
 // NewRoom give back new chatroom
-func NewRoom(name string, u user.Service, logger logger.Service) *Room {
+func NewRoom(name string, u user.Service, logger logger.Service, server *Server) *Room {
 	logger.Info("cmp", "room", "method", "NewRoom", "msg", fmt.Sprintf("new room %s Created", name))
 	// clientService := client.NewService()
 	return &Room{
@@ -43,6 +44,7 @@ func NewRoom(name string, u user.Service, logger logger.Service) *Room {
 		EventDespatcher:  NewEventDispatcher(),
 		Clients:          make(map[string]*Client),
 		logger:           logger,
+		server:           server,
 	}
 }
 
@@ -99,7 +101,7 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 
 		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("new user created:%v", newUser))
 
-		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID, r)
+		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID, r, r.server)
 		if err != nil {
 			return err
 		}
@@ -170,8 +172,8 @@ func (r *Room) SendToAllClientsWithIgnored(message *pb.Message, clientIds ...int
 func (r *Room) DeleteClient(key string) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
 	delete(r.Clients, key)
+	r.logger.Info("cmp", "room", "method", "DeleteClient", "ms", fmt.Sprintf("client deleted succesfully,key:%s", key))
 }
 
 // TODO : uniqId implementasyonuna gerek yoktu çünkü gelen ip uniq
