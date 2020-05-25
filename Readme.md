@@ -10,7 +10,8 @@ this repo developing for command line chat
 TODO : 
     - more readable logs should be write, all log template shoul be same
     - command line flags implementing
-    - 
+    
+    
 USAGE:
 
     CLIEND COMMAND:
