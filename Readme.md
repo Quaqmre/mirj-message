@@ -12,6 +12,7 @@ TODO :
     - command line flags implementing
     - 
 USAGE:
+
     CLIEND COMMAND:
     &ls room => list all room and total count
     &ls user => list all user in current room and total user count
