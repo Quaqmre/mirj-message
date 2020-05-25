@@ -37,7 +37,7 @@ func main() {
 	http.HandleFunc("/", handler)
 	loggerService.Info("cmp", "main", "method", "main", "msg", "Server running..")
 
-	http.ListenAndServe("localhost:9001", nil)
+	http.ListenAndServe(":9001", nil)
 
 }
 
