@@ -21,7 +21,7 @@ USAGE:
     &crete <string> => create room if not exist
     &exit => exit room 
 
-    SERVER COMMAND LINE ARGUMENT:
+    ClIENT COMMAND LINE ARGUMENT:
     -help => get help document
     -host => set host adresses
     -name => set username 
