@@ -101,7 +101,7 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 
 		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("new user created:%v", newUser))
 
-		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID, r, r.server)
+		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), newUser, conn, newUser.UniqID, r, r.server)
 		if err != nil {
 			return err
 		}
@@ -202,4 +202,15 @@ func (r *Room) broadcastMessageWithIgnored(s string, id ...int32) {
 	// 		}
 	// 	}
 	// }
+}
+func (r *Room) GetUsers() string {
+	users := ""
+	for _, i := range r.Clients {
+		users = fmt.Sprintf("%s,%s", i.User.Name, users)
+
+	}
+	trimed := users[:len(users)-1]
+	users = fmt.Sprintf("%s:%v", trimed, len(r.Clients))
+
+	return users
 }

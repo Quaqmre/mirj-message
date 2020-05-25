@@ -41,9 +41,12 @@ func (s *Server) CreateRoom(name string) *Room {
 
 func (s *Server) GetRooms() string {
 	list := ""
-	for i, r := range s.Rooms {
-		list = fmt.Sprintf("%s:%v,%s", i, len(r.Clients), list)
+	for i := range s.Rooms {
+		list = fmt.Sprintf("%s,%s", i, list)
 	}
+	list = list[:len(list)-1]
+	list = fmt.Sprintf("%s:%v", list, len(s.Rooms))
+
 	s.loggerService.Info("cmp", "server", "method", "GetRooms", "msg", "Rooms listed succesfuly")
 	return list
 }

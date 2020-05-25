@@ -8,6 +8,7 @@ import (
 
 	"github.com/Quaqmre/mırjmessage/events"
 	"github.com/Quaqmre/mırjmessage/pb"
+	"github.com/Quaqmre/mırjmessage/user"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
@@ -21,8 +22,9 @@ var ErrorClientExist = errors.New("user already exist")
 //Client wrap User and add some net info
 type Client struct {
 	ClientIp      string
-	Con           *websocket.Conn
 	UserID        int32
+	User          *user.User
+	Con           *websocket.Conn
 	Key           string
 	ch            chan *[]byte
 	Context       context.Context
@@ -49,10 +51,11 @@ type Client struct {
 
 // TODO : bir kullanıcı sadece 1 kere mi clients içinde olablir ? Yoksa geçerli olanı mı dönmek gerek
 // INFO : client servisi her room özelinde bir tane generete edilmelidir.
-func NewClient(ip string, con *websocket.Conn, userID int32, room *Room, server *Server) (*Client, error) {
+func NewClient(ip string, user *user.User, con *websocket.Conn, userID int32, room *Room, server *Server) (*Client, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	client := &Client{
 		ClientIp:      ip,
+		User:          user,
 		Con:           con,
 		UserID:        userID,
 		Key:           con.LocalAddr().String(),
@@ -174,16 +177,38 @@ func (c *Client) handleUserCommand(cmd *pb.Command) {
 	switch cmd.Input {
 	case pb.Input_LSROOM:
 		rooms := c.server.GetRooms()
-		letter := &pb.UserMessage_Letter{
+		letter := &pb.Message_Letter{
 			Letter: &pb.Letter{
 				Message: rooms,
 			},
 		}
-		message := &pb.UserMessage{Content: letter}
+		message := &pb.Message{Content: letter}
 
 		dat, _ := proto.Marshal(message)
 		c.ch <- &dat
+	case pb.Input_LSUSER:
+		users := c.room.GetUsers()
+		letter := &pb.Message_Letter{
+			Letter: &pb.Letter{
+				Message: users,
+			},
+		}
+		message := &pb.Message{Content: letter}
+
+		dat, _ := proto.Marshal(message)
+		c.ch <- &dat
+	case pb.Input_CHNAME:
+		oldUserName := c.User.Name
+		userName := cmd.Message
+		err := c.server.userService.ChangeUserName(userName, c.User.UniqID)
+		if err != nil {
+			c.server.loggerService.Warning("cmp", "client", "method", "ChangeUserName", "err", err.Error())
+			return
+		}
+		c.server.loggerService.Info("cmp", "client", "method", "ChangeUserName", "msg", fmt.Sprintf("user name %s->%s changed", oldUserName, c.User.Name))
+
 	}
+
 }
 
 // TODO : Muted işlemleri bu katmanda mı handle edilmedi

@@ -30,8 +30,11 @@ func (sender *Sender) HandleUserConnected(userConnectedEvent *events.UserConnect
 
 // HandleUserInput test
 func (sender *Sender) HandleUserLetter(userLettertedEvent *events.SendLetter) {
+	user := sender.server.userService.Get(userLettertedEvent.ClientId)
+	userLettertedEvent.Letter.Message = fmt.Sprintf("%s:%s", user.Name, userLettertedEvent.Letter.Message)
 	message := &pb.Message{Content: &pb.Message_Letter{Letter: userLettertedEvent.Letter}}
-	sender.server.SendToAllClientsWithIgnored(message)
+
+	sender.server.SendToAllClientsWithIgnored(message, userLettertedEvent.ClientId)
 }
 
 // HandleUserQuit test

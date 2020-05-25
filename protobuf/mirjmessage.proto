@@ -35,8 +35,8 @@ string message=1;
 }
 
 message Command {
-  input Input = 1;
-  message string =2;
+  Input input = 1;
+  string message =2;
 }
 
 enum Input {
@@ -44,4 +44,9 @@ enum Input {
   LSUSER = 1;
   MKROOM = 2;
   RMROOM = 3;
+  JOIN =   4;
+  EXIT =   5;
+  CHNAME = 6;
+  
+
 }

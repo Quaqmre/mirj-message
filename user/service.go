@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -22,6 +23,7 @@ type Service interface {
 	NewUser(name, password string) (*User, error)
 	Get(userID int32) *User
 	Marshall(source []byte) (*User, error)
+	ChangeUserName(name string, userId int32) error
 }
 
 // User hold information most tiny way
@@ -62,6 +64,9 @@ func (u *UserService) NewUser(name, password string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	if name == "anonymous" {
+		newUser.Name = fmt.Sprintf("%s%v", newUser.Name, newUser.UniqID)
+	}
 	u.mutex.Lock()
 	u.Dict[newUser.UniqID] = newUser
 	u.mutex.Unlock()
@@ -94,6 +99,18 @@ func (u *UserService) makeUniqName(user *User) (ru *User, e error) {
 // Get user in map
 func (u *UserService) Get(userID int32) *User {
 	return u.Dict[userID]
+}
+
+func (u *UserService) ChangeUserName(name string, userId int32) error {
+
+	for _, u := range u.Dict {
+		if u.Name == name {
+			return errors.New("user name exist")
+		}
+	}
+	user := u.Get(userId)
+	user.Name = name
+	return nil
 }
 
 // TODO : give a change to admin parse json or protobuff

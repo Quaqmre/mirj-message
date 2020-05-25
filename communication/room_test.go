@@ -1,3 +1,5 @@
+//Deprecated
+
 package communication
 
 import (
