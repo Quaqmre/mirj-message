@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 
@@ -27,16 +26,16 @@ func main() {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println(err)
+			loggerService.Fatal("cmp", "main", "method", "handler", "err", err)
 			return
 		}
 
 		server.Rooms["default"].AddClientChan <- conn
-		log.Println("Added new client. Now", "clients connected.")
+		loggerService.Info("cmp", "main", "method", "handler", "msg", "Added new client.")
 	}
 
 	http.HandleFunc("/", handler)
-	log.Println("Server running...")
+	loggerService.Info("cmp", "main", "method", "main", "msg", "Server running..")
 
 	http.ListenAndServe("localhost:9001", nil)
 

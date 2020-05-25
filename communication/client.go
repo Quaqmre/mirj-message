@@ -94,7 +94,7 @@ func (c *Client) listenRead() {
 	for {
 		select {
 		case <-c.Context.Done():
-			log.Println(string(c.UserID) + "connectin canceled I cant read any more")
+			c.room.logger.Warning("cmp", "client", "method", "listenRead", "msg", fmt.Sprintf("%v connectin canceled I cant read any more", c.UserID))
 			user := c.room.userService.Get(c.UserID)
 			qEvent := events.UserQuit{
 				ClientID: c.UserID,
@@ -149,7 +149,7 @@ func (c *Client) unmarshalUserInput(data []byte) {
 // TODO : monitör edebilmek için yazım zamanlarını alıp ortalamasını yazabiliriz.
 func (c *Client) listenWrite() {
 
-	log.Println("Listening write to client")
+	c.room.logger.Info("cmp", "client", "method", "listenWrite", "msg", "Listening write to client")
 
 	for {
 		select {

@@ -2,7 +2,6 @@ package communication
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/Quaqmre/mırjmessage/events"
@@ -34,7 +33,7 @@ type Room struct {
 
 // NewRoom give back new chatroom
 func NewRoom(name string, u user.Service, logger logger.Service) *Room {
-	log.Printf("new room %s Created", name)
+	logger.Info("cmp", "room", "method", "NewRoom", "msg", fmt.Sprintf("new room %s Created", name))
 	// clientService := client.NewService()
 	return &Room{
 		Name:             name,
@@ -57,11 +56,11 @@ type Package struct {
 func (r *Room) Run() {
 
 	go r.EventDespatcher.RunEventLoop()
-	log.Println(r.Name + " room running")
+	r.logger.Info("cmp", "room", "method", "Run", "msg", fmt.Sprintf("%s room running", r.Name))
 	for {
 		select {
 		case conn := <-r.AddClientChan:
-			log.Println(r.Name + " accept a client")
+			r.logger.Info("cmp", "room", "method", "Run", "msg", fmt.Sprintf("%s accept a client", r.Name))
 			go func() {
 				r.acceptNewClient(conn)
 			}()
@@ -91,15 +90,14 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 		if err != nil {
 			return err
 		}
-
-		log.Printf("first message is %#v\n", user)
+		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("first message is %#v", user))
 
 		newUser, err := r.userService.NewUser(user.Name, user.Password)
 		if err != nil {
 			return err
 		}
 
-		log.Printf("new user created:%v\n", newUser)
+		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("new user created:%v", newUser))
 
 		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), conn, newUser.UniqID, r)
 		if err != nil {
@@ -110,7 +108,7 @@ func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
 		r.mx.Unlock()
 		event := events.UserConnected{ClientID: cl.UserID, Name: newUser.Name}
 		r.EventDespatcher.FireUserConnected(&event)
-		log.Printf("client created:%v\n", cl)
+		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("client created:%s", cl.ClientIp))
 
 		cl.Listen()
 	}

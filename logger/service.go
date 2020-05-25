@@ -2,6 +2,7 @@ package logger
 
 import (
 	"io"
+	"time"
 
 	"github.com/go-kit/kit/log"
 )
@@ -19,6 +20,7 @@ type logger struct {
 func NewLogger(w io.Writer) logger {
 	lg := logger{}
 	lg.Logger = log.NewLogfmtLogger(w)
+	lg.Logger = log.With(lg.Logger, "ts", log.TimestampFormat(time.Now, time.Stamp))
 	return lg
 }
 

@@ -56,6 +56,7 @@ func main() {
 			err := proto.Unmarshal(data, mes)
 
 			if err != nil {
+
 				log.Println("fatal when un marshal")
 			}
 			switch mes.Content.(type) {

@@ -35,10 +35,13 @@ string message=1;
 }
 
 message Command {
-  Input Input = 1;
+  input Input = 1;
+  message string =2;
 }
 
 enum Input {
   LSROOM = 0;
   LSUSER = 1;
+  MKROOM = 2;
+  RMROOM = 3;
 }
