@@ -10,7 +10,8 @@ this repo developing for command line chat
 TODO : 
     - more readable logs should be write, all log template shoul be same
     - command line flags implementing
-    - 
+    
+    
 USAGE:
 
     CLIEND COMMAND:
@@ -21,7 +22,7 @@ USAGE:
     &crete <string> => create room if not exist
     &exit => exit room 
 
-    SERVER COMMAND LINE ARGUMENT:
+    ClIENT COMMAND LINE ARGUMENT:
     -help => get help document
     -host => set host adresses
     -name => set username 
