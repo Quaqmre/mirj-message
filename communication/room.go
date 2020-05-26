@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Quaqmre/mırjmessage/events"
 	"github.com/Quaqmre/mırjmessage/logger"
 	"github.com/Quaqmre/mırjmessage/pb"
 	"github.com/Quaqmre/mırjmessage/user"
@@ -57,60 +56,65 @@ func (r *Room) Run() {
 
 	go r.EventDespatcher.RunEventLoop()
 	r.logger.Info("cmp", "room", "method", "Run", "msg", fmt.Sprintf("%s room running", r.Name))
-	for {
-		select {
-		case conn := <-r.AddClientChan:
-			r.logger.Info("cmp", "room", "method", "Run", "msg", fmt.Sprintf("%s accept a client", r.Name))
-			go func() {
-				r.acceptNewClient(conn)
-			}()
-		}
-	}
+	// for {
+	// 	select {
+	// 	// case conn := <-r.AddClientChan:
+	// 	// 	r.logger.Info("cmp", "room", "method", "Run", "msg", fmt.Sprintf("%s accept a client", r.Name))
+	// 	// 	r.Clients[conn.Key] = conn
+	// 	// go func() {
+	// 	// 	r.acceptNewClient(conn)
+	// 	// }()
+	// 	}
+	// }
 }
 
 func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
-	defer func() {
-		if err != nil {
-			r.logger.Fatal("err", fmt.Sprintf("new client cant accept for:%s", err))
-		}
-	}()
-
-	messageType, data, err := conn.ReadMessage()
-
-	if err != nil {
-		return err
-	}
-
-	if messageType == websocket.BinaryMessage {
-
-		user, err := r.userService.Marshall(data)
-		if err != nil {
-			return err
-		}
-		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("first message is %#v", user))
-
-		newUser, err := r.userService.NewUser(user.Name, user.Password)
-		if err != nil {
-			return err
-		}
-
-		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("new user created:%v", newUser))
-
-		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), newUser, conn, newUser.UniqID, r, r.server)
-		if err != nil {
-			return err
-		}
-		r.mx.Lock()
-		r.Clients[cl.ClientIp] = cl
-		r.mx.Unlock()
-		event := events.UserConnected{ClientID: cl.UserID, Name: newUser.Name}
-		r.EventDespatcher.FireUserConnected(&event)
-		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("client created:%s", cl.ClientIp))
-
-		cl.Listen()
-	}
 	return nil
 }
+
+// func (r *Room) acceptNewClient(conn *websocket.Conn) (err error) {
+// 	defer func() {
+// 		if err != nil {
+// 			r.logger.Fatal("err", fmt.Sprintf("new client cant accept for:%s", err))
+// 		}
+// 	}()
+
+// 	messageType, data, err := conn.ReadMessage()
+
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	if messageType == websocket.BinaryMessage {
+
+// 		user, err := r.userService.Marshall(data)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("first message is %#v", user))
+
+// 		newUser, err := r.userService.NewUser(user.Name, user.Password)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("new user created:%v", newUser))
+
+// 		cl, err := NewClient(conn.LocalAddr().String()+string(newUser.UniqID), newUser, conn, newUser.UniqID, r, r.server)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		r.mx.Lock()
+// 		r.Clients[cl.ClientIp] = cl
+// 		r.mx.Unlock()
+// 		event := events.UserConnected{ClientID: cl.UserID, Name: newUser.Name}
+// 		r.EventDespatcher.FireUserConnected(&event)
+// 		r.logger.Info("cmp", "room", "method", "acceptNewClient", "msg", fmt.Sprintf("client created:%s", cl.ClientIp))
+
+// 		cl.Listen()
+// 	}
+// 	return nil
+// }
 
 // // TODO : channels still not checked
 // func (r *Room) handleRead(cl *client.Client) {
@@ -168,7 +172,14 @@ func (r *Room) DeleteClient(key string) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	delete(r.Clients, key)
-	r.logger.Info("cmp", "room", "method", "DeleteClient", "ms", fmt.Sprintf("client deleted succesfully,key:%s", key))
+	r.logger.Info("cmp", "room", "method", "DeleteClient", "msg", fmt.Sprintf("client deleted succesfully from room,key:%s", key))
+}
+
+func (r *Room) AddClient(client *Client) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	r.Clients[client.Key] = client
+	r.logger.Info("cmp", "room", "method", "AddClient", "msg", fmt.Sprintf("client added succesfully,key:%s", client.Key))
 }
 
 // TODO : uniqId implementasyonuna gerek yoktu çünkü gelen ip uniq

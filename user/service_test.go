@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"math"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -11,29 +12,27 @@ import (
 	"github.com/Quaqmre/mırjmessage/mock"
 )
 
-
-
 func TestNewUser(t *testing.T) {
 	var mockedlogger logger.Service = mock.NewMockedLogger()
 	var u *UserService = newUserService(mockedlogger)
-	tests:=[]struct{
-		name string
-		input string
+	tests := []struct {
+		name           string
+		input          string
 		expectedResult int32
 	}{
 		{
-			name:"firstuser",
-			input:"user1",
-			expectedResult:1,
+			name:           "firstuser",
+			input:          "user1",
+			expectedResult: 1,
 		},
 		{
-			name:"seconduser",
-			input:"user2",
-			expectedResult:2,
+			name:           "seconduser",
+			input:          "user2",
+			expectedResult: 2,
 		},
 	}
-	for _,test:=range tests{
-		ex,err :=u.NewUser(test.input, "arat")
+	for _, test := range tests {
+		ex, err := u.NewUser(test.input, "arat")
 		if err != nil {
 			t.Error("expected nil error but returned:", err)
 		}
@@ -43,14 +42,14 @@ func TestNewUser(t *testing.T) {
 	}
 }
 
-func TestNewUser_return_error(t *testing.T){
+func TestNewUser_return_error(t *testing.T) {
 	var mockedlogger logger.Service = mock.NewMockedLogger()
 	var u *UserService = newUserService(mockedlogger)
 
-	expected:=ErrorInvalidContext
-	_,err:=u.NewUser("","")
-	if err!=expected{
-		t.Errorf("expected %s but returned %s",expected.Error(),err.Error())
+	expected := ErrorInvalidContext
+	_, err := u.NewUser("", "")
+	if err != expected {
+		t.Errorf("expected %s but returned %s", expected.Error(), err.Error())
 	}
 
 }
@@ -116,15 +115,12 @@ func TestAtomic_Increase_generete_uniq_Id(t *testing.T) {
 func TestUserService_Get(t *testing.T) {
 	var mockedlogger logger.Service = mock.NewMockedLogger()
 	var u *UserService = newUserService(mockedlogger)
-	expected,_:=u.NewUser("deneme","sifre")
+	expected, _ := u.NewUser("deneme", "sifre")
 
-	newUser:=u.Get(expected.UniqID)
-
-	if newUser!=expected{
+	newUser := u.Get(expected.UniqID)
+	if !reflect.DeepEqual(expected, newUser) {
 		t.Error("genereted user and getting user is not equal")
 	}
-
-
 
 }
 
@@ -132,25 +128,24 @@ func TestUserService_Marshall(t *testing.T) {
 	var mockedlogger logger.Service = mock.NewMockedLogger()
 	var u *UserService = newUserService(mockedlogger)
 
-	expected:=User{Name:"akif",Password:"123",UniqID:1}
-	testMarshal,_:=json.Marshal(expected)
+	expected := User{Name: "akif", Password: "123", UniqID: 1}
+	testMarshal, _ := json.Marshal(expected)
 
-	parsedUser,_:=u.Marshall(testMarshal)
+	parsedUser, _ := u.Marshall(testMarshal)
 
-	if expected!=*parsedUser{
-		t.Errorf("expected User string %v,returned %v",expected,parsedUser)
+	if expected != *parsedUser {
+		t.Errorf("expected User string %v,returned %v", expected, parsedUser)
 	}
 }
 func TestUserService_Marshall_return_error(t *testing.T) {
 	var mockedlogger logger.Service = mock.NewMockedLogger()
 	var u *UserService = newUserService(mockedlogger)
 
+	testMarshal := `{"User":"akif"`
 
-	testMarshal:=`{"User":"akif"`
+	_, err := u.Marshall([]byte(testMarshal))
 
-	_,err:=u.Marshall([]byte(testMarshal))
-
-	if err==nil{
+	if err == nil {
 		t.Error("expected err but returned err=nil")
 	}
 }

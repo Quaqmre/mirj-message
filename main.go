@@ -29,8 +29,9 @@ func main() {
 			logger.Fatal("cmp", "main", "method", "handler", "err", err)
 			return
 		}
-
-		server.Rooms["default"].AddClientChan <- conn
+		server.AcceptNewClient(conn)
+		// server.Rooms["default"].AddClientChan <- conn
+		// server.ac
 		logger.Info("cmp", "main", "method", "handler", "msg", "Added new client for default.")
 	}
 

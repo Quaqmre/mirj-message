@@ -60,22 +60,21 @@ func (c *Client) GetInput() {
 		switch sp[0] {
 		case "&ls":
 			if sp[1] == "user" {
-
-				data := c.LSUSER()
+				data := c.MakeCommand(pb.Input_LSUSER, "")
 				c.MarshalEndWrite(data)
 			}
 			if sp[1] == "room" {
-				data := c.LSROOM()
+				data := c.MakeCommand(pb.Input_LSROOM, "")
 				c.MarshalEndWrite(data)
 			}
 		case "&exit":
-			data := c.EXIT()
+			data := c.MakeCommand(pb.Input_EXIT, "")
 			c.MarshalEndWrite(data)
 		case "&ch":
-			data := c.CNAME(sp[1])
+			data := c.MakeCommand(pb.Input_CHNAME, sp[1])
 			c.MarshalEndWrite(data)
 		default:
-			data := c.Message(text)
+			data := c.MakeMessage(text)
 			c.MarshalEndWrite(data)
 		}
 	}
@@ -86,12 +85,24 @@ func (c *Client) MarshalEndWrite(mes *pb.UserMessage) {
 	_ = c.conn.WriteMessage(websocket.BinaryMessage, dat)
 }
 
-func (c *Client) Message(input string) *pb.UserMessage {
+func (c *Client) MakeMessage(input string) *pb.UserMessage {
 	msg := &pb.UserMessage_Letter{
 		Letter: &pb.Letter{
 			Message: input,
 		},
 	}
 	message := &pb.UserMessage{Content: msg}
+	return message
+}
+
+// MakeCommand build user command for send server
+func (c *Client) MakeCommand(cmdType pb.Input, content string) *pb.UserMessage {
+	command := &pb.UserMessage_Command{
+		Command: &pb.Command{
+			Input:   cmdType,
+			Message: content,
+		},
+	}
+	message := &pb.UserMessage{Content: command}
 	return message
 }

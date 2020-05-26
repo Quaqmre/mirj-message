@@ -53,14 +53,14 @@ type Client struct {
 
 // TODO : bir kullanıcı sadece 1 kere mi clients içinde olablir ? Yoksa geçerli olanı mı dönmek gerek
 // INFO : client servisi her room özelinde bir tane generete edilmelidir.
-func NewClient(ip string, user *user.User, con *websocket.Conn, userID int32, room *Room, server *Server) (*Client, error) {
+func NewClient(key string, user *user.User, con *websocket.Conn, userID int32, room *Room, server *Server) (*Client, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	client := &Client{
-		ClientIp:      ip,
+		ClientIp:      con.LocalAddr().String(),
 		User:          user,
 		Con:           con,
 		UserID:        userID,
-		Key:           con.LocalAddr().String(),
+		Key:           key,
 		Context:       ctx,
 		cancelContext: cancel,
 		room:          room,
@@ -103,11 +103,11 @@ func (c *Client) listenRead() {
 		select {
 		case <-c.Context.Done():
 			c.logger.Warning("cmp", "client", "method", "listenRead", "msg", fmt.Sprintf("%v connectin canceled I cant read any more", c.UserID))
-			user := c.room.userService.Get(c.UserID)
+			user := c.server.userService.Get(c.UserID)
 			qEvent := events.UserQuit{
 				ClientID: c.UserID,
 				Name:     user.Name,
-				Key:      c.ClientIp,
+				Key:      c.Key,
 			}
 			c.room.EventDespatcher.FireUserQuit(&qEvent)
 			return
@@ -209,9 +209,45 @@ func (c *Client) handleUserCommand(cmd *pb.Command) {
 			return
 		}
 		c.logger.Info("cmp", "client", "method", "ChangeUserName", "msg", fmt.Sprintf("user name %s->%s changed", oldUserName, c.User.Name))
+	case pb.Input_JOIN:
+		if c.room != nil {
+			c.room.EventDespatcher.FireUserQuit(c.QuitEvent())
+		}
+		roomName := cmd.Message
+		room, ok := c.server.Rooms[roomName]
+		if !ok {
+			fmt.Println(roomName)
+			log.Fatal("fatalll")
+		}
+		c.room = room
+		room.EventDespatcher.FireUserConnected(c.ConnectedEvent())
+
+	case pb.Input_MKROOM:
+		c.server.CreateRoom(cmd.Message)
+
+	case pb.Input_EXIT:
+		c.room.EventDespatcher.FireUserQuit(c.QuitEvent())
+		c.room = nil
 
 	}
+}
 
+// ConnectedEvent FireUserConnectedEvent
+func (c *Client) ConnectedEvent() *events.UserConnected {
+	return &events.UserConnected{
+		ClientID: c.User.UniqID,
+		Key:      c.Key,
+		Name:     c.User.Name,
+	}
+}
+
+// QuitEvent FireUserQuitEvent
+func (c *Client) QuitEvent() *events.UserQuit {
+	return &events.UserQuit{
+		ClientID: c.User.UniqID,
+		Key:      c.Key,
+		Name:     c.User.Name,
+	}
 }
 
 // TODO : Muted işlemleri bu katmanda mı handle edilmedi

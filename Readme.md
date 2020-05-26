@@ -15,12 +15,12 @@ TODO :
 USAGE:
 
     CLIEND COMMAND:
-    &ls room => list all room and total count
-    &ls user => list all user in current room and total user count
-    &ch <string> => change user name after connected server
-    &join <string> => join spesfic room with room name if exist
-    &crete <string> => create room if not exist
-    &exit => exit room 
+    &ls room => list all room and total count => done
+    &ls user => list all user in current room and total user count => done
+    &ch <string> => change user name after connected server => done
+    &joın <string> => join spesfic room with room name if exist => done
+    &mk <string> => create room if not exist => done
+    &ext => exit room => done 
 
     ClIENT COMMAND LINE ARGUMENT:
     -help => get help document

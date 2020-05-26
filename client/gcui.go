@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Quaqmre/mırjmessage/pb"
 	"github.com/jroimartin/gocui"
 )
 
@@ -20,21 +21,27 @@ func (c *Client) Send(g *gocui.Gui, v *gocui.View) error {
 	switch sp[0] {
 	case "&ls":
 		if sp[1] == "user\n" {
-			data := c.LSUSER()
+			data := c.MakeCommand(pb.Input_LSUSER, "")
 			c.MarshalEndWrite(data)
 		}
 		if sp[1] == "room\n" {
-			data := c.LSROOM()
+			data := c.MakeCommand(pb.Input_LSROOM, "")
 			c.MarshalEndWrite(data)
 		}
-	case "&exit\n":
-		data := c.EXIT()
+	case "&ch":
+		data := c.MakeCommand(pb.Input_CHNAME, sp[1][:len(sp[1])-1])
 		c.MarshalEndWrite(data)
-	case "&ch\n":
-		data := c.CNAME(sp[1][:len(sp[1])-1])
+	case "&joın":
+		data := c.MakeCommand(pb.Input_JOIN, sp[1][:len(sp[1])-1])
+		c.MarshalEndWrite(data)
+	case "&mk":
+		data := c.MakeCommand(pb.Input_MKROOM, sp[1][:len(sp[1])-1])
+		c.MarshalEndWrite(data)
+	case "&ext\n":
+		data := c.MakeCommand(pb.Input_EXIT, "")
 		c.MarshalEndWrite(data)
 	default:
-		data := c.Message(text)
+		data := c.MakeMessage(text)
 		c.MarshalEndWrite(data)
 	}
 
