@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/Quaqmre/mırjmessage/events"
+	"github.com/Quaqmre/mırjmessage/logger"
 	"github.com/Quaqmre/mırjmessage/pb"
 	"github.com/Quaqmre/mırjmessage/user"
 	"github.com/golang/protobuf/proto"
@@ -31,6 +32,7 @@ type Client struct {
 	cancelContext context.CancelFunc
 	room          *Room
 	server        *Server
+	logger        logger.Service
 }
 
 // // NewService make interface of client service
@@ -64,6 +66,7 @@ func NewClient(ip string, user *user.User, con *websocket.Conn, userID int32, ro
 		room:          room,
 		server:        server,
 		ch:            make(chan *[]byte, 100),
+		logger:        server.logger,
 	}
 
 	return client, nil
@@ -74,7 +77,7 @@ func (c *Client) SendMessage(bytes *[]byte) {
 	select {
 	case c.ch <- bytes:
 	default:
-		c.room.logger.Fatal("err:", "it is dropped message I guess :D")
+		c.logger.Fatal("err:", "it is dropped message I guess :D")
 	}
 }
 
@@ -99,7 +102,7 @@ func (c *Client) listenRead() {
 	for {
 		select {
 		case <-c.Context.Done():
-			c.room.logger.Warning("cmp", "client", "method", "listenRead", "msg", fmt.Sprintf("%v connectin canceled I cant read any more", c.UserID))
+			c.logger.Warning("cmp", "client", "method", "listenRead", "msg", fmt.Sprintf("%v connectin canceled I cant read any more", c.UserID))
 			user := c.room.userService.Get(c.UserID)
 			qEvent := events.UserQuit{
 				ClientID: c.UserID,
@@ -118,7 +121,7 @@ func (c *Client) readFromWebSocket() {
 	typ, data, err := c.Con.ReadMessage()
 
 	if err != nil {
-		c.room.logger.Fatal("err:", fmt.Sprintf("when reading message get error from:%v", c.UserID))
+		c.logger.Fatal("err:", fmt.Sprintf("when reading message get error from:%v", c.UserID))
 		c.cancelContext()
 		return
 	}
@@ -137,7 +140,7 @@ func (c *Client) readFromWebSocket() {
 func (c *Client) unmarshalUserInput(data []byte) {
 	protoUserMessage := &pb.UserMessage{}
 	if err := proto.Unmarshal(data, protoUserMessage); err != nil {
-		c.room.logger.Fatal("err", fmt.Sprintf("Failed to unmarshal UserInput:%s", err))
+		c.logger.Fatal("err", fmt.Sprintf("Failed to unmarshal UserInput:%s", err))
 		return
 	}
 
@@ -157,7 +160,7 @@ func (c *Client) unmarshalUserInput(data []byte) {
 // TODO : monitör edebilmek için yazım zamanlarını alıp ortalamasını yazabiliriz.
 func (c *Client) listenWrite() {
 
-	c.room.logger.Info("cmp", "client", "method", "listenWrite", "msg", "Listening write to client")
+	c.logger.Info("cmp", "client", "method", "listenWrite", "msg", "Listening write to client")
 
 	for {
 		select {
@@ -166,7 +169,7 @@ func (c *Client) listenWrite() {
 
 			if err != nil {
 				//ert.Wrapf(err,fmt.Sprintf("cant send a client:%v" ,c.UserID))
-				c.room.logger.Fatal("err", fmt.Sprintf("cant send a client:%v err:%s", c.UserID, err.Error()))
+				c.logger.Fatal("err", fmt.Sprintf("cant send a client:%v err:%s", c.UserID, err.Error()))
 			}
 		case <-c.Context.Done():
 			return
@@ -202,10 +205,10 @@ func (c *Client) handleUserCommand(cmd *pb.Command) {
 		userName := cmd.Message
 		err := c.server.userService.ChangeUserName(userName, c.User.UniqID)
 		if err != nil {
-			c.server.loggerService.Warning("cmp", "client", "method", "ChangeUserName", "err", err.Error())
+			c.logger.Warning("cmp", "client", "method", "ChangeUserName", "err", err.Error())
 			return
 		}
-		c.server.loggerService.Info("cmp", "client", "method", "ChangeUserName", "msg", fmt.Sprintf("user name %s->%s changed", oldUserName, c.User.Name))
+		c.logger.Info("cmp", "client", "method", "ChangeUserName", "msg", fmt.Sprintf("user name %s->%s changed", oldUserName, c.User.Name))
 
 	}
 

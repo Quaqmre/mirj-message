@@ -17,7 +17,7 @@ type logger struct {
 	log.Logger
 }
 
-func NewLogger(w io.Writer) logger {
+func NewLogger(w io.Writer) Service {
 	lg := logger{}
 	lg.Logger = log.NewLogfmtLogger(w)
 	lg.Logger = log.With(lg.Logger, "ts", log.TimestampFormat(time.Now, time.Stamp))

@@ -12,9 +12,9 @@ import (
 )
 
 func main() {
-	loggerService := logger.NewLogger(os.Stderr)
-	userService := user.NewUserService(loggerService)
-	server := communication.NewServer(loggerService, userService)
+	logger := logger.NewLogger(os.Stderr)
+	userService := user.NewUserService(logger)
+	server := communication.NewServer(logger, userService)
 
 	upgrader := &websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -26,16 +26,16 @@ func main() {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			loggerService.Fatal("cmp", "main", "method", "handler", "err", err)
+			logger.Fatal("cmp", "main", "method", "handler", "err", err)
 			return
 		}
 
 		server.Rooms["default"].AddClientChan <- conn
-		loggerService.Info("cmp", "main", "method", "handler", "msg", "Added new client for default.")
+		logger.Info("cmp", "main", "method", "handler", "msg", "Added new client for default.")
 	}
 
 	http.HandleFunc("/", handler)
-	loggerService.Info("cmp", "main", "method", "main", "msg", "Server running..")
+	logger.Info("cmp", "main", "method", "main", "msg", "Server running..")
 
 	http.ListenAndServe(":9001", nil)
 

@@ -9,24 +9,24 @@ import (
 )
 
 type Server struct {
-	Rooms         map[string]*Room
-	userService   user.Service
-	loggerService logger.Service
-	mx            sync.RWMutex
+	Rooms       map[string]*Room
+	userService user.Service
+	logger      logger.Service
+	mx          sync.RWMutex
 }
 
 func NewServer(logger logger.Service, user user.Service) *Server {
 	s := &Server{
-		Rooms:         make(map[string]*Room),
-		userService:   user,
-		loggerService: logger,
+		Rooms:       make(map[string]*Room),
+		userService: user,
+		logger:      logger,
 	}
 	rm := s.CreateRoom("default")
 	go rm.Run()
 	return s
 }
 func (s *Server) CreateRoom(name string) *Room {
-	rm := NewRoom(name, s.userService, s.loggerService, s)
+	rm := NewRoom(name, s.userService, s.logger, s)
 
 	// first handler for each event
 	sender := NewSender(rm)
@@ -47,6 +47,6 @@ func (s *Server) GetRooms() string {
 	list = list[:len(list)-1]
 	list = fmt.Sprintf("%s:%v", list, len(s.Rooms))
 
-	s.loggerService.Info("cmp", "server", "method", "GetRooms", "msg", "Rooms listed succesfuly")
+	s.logger.Info("cmp", "server", "method", "GetRooms", "msg", "Rooms listed succesfuly")
 	return list
 }

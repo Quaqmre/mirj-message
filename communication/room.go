@@ -14,22 +14,21 @@ import (
 
 // Room is a chating place there is a lot of message and user inside
 type Room struct {
-	Name             string
-	Password         string
-	Owners           []int
-	Tags             []string
-	BanList          []int
-	IsPrivite        bool
-	Capacity         int
-	Clients          map[string]*Client
-	AddClientChan    chan *websocket.Conn
-	RemoveClientChan chan Client
+	Name          string
+	Password      string
+	Owners        []int
+	Tags          []string
+	BanList       []int
+	IsPrivite     bool
+	Capacity      int
+	Clients       map[string]*Client
+	AddClientChan chan *websocket.Conn
 	// clientService    *client.Service
+	mx              sync.RWMutex
+	server          *Server
 	userService     user.Service
 	logger          logger.Service
 	EventDespatcher *EventDispatcher
-	mx              sync.RWMutex
-	server          *Server
 }
 
 // NewRoom give back new chatroom
@@ -37,14 +36,13 @@ func NewRoom(name string, u user.Service, logger logger.Service, server *Server)
 	logger.Info("cmp", "room", "method", "NewRoom", "msg", fmt.Sprintf("new room %s Created", name))
 	// clientService := client.NewService()
 	return &Room{
-		Name:             name,
-		userService:      u,
-		AddClientChan:    make(chan *websocket.Conn, 100),
-		RemoveClientChan: make(chan Client),
-		EventDespatcher:  NewEventDispatcher(),
-		Clients:          make(map[string]*Client),
-		logger:           logger,
-		server:           server,
+		Name:            name,
+		userService:     u,
+		AddClientChan:   make(chan *websocket.Conn, 100),
+		EventDespatcher: NewEventDispatcher(),
+		Clients:         make(map[string]*Client),
+		logger:          logger,
+		server:          server,
 	}
 }
 
@@ -66,9 +64,6 @@ func (r *Room) Run() {
 			go func() {
 				r.acceptNewClient(conn)
 			}()
-
-		case c := <-r.RemoveClientChan:
-			delete(c.room.Clients, c.ClientIp)
 		}
 	}
 }
