@@ -14,7 +14,9 @@ TODO :
     
 USAGE:
     After Server up `go run main.go`
+    
     Client can connect server `go run client/*.go`
+
     CLIEND COMMAND:
     &ls room => list all room and total count => done
     &ls user => list all user in current room and total user count => done
