@@ -13,8 +13,8 @@ TODO :
     
     
 USAGE:
+
     After Server up `go run main.go`
-    
     Client can connect server `go run client/*.go`
 
     CLIEND COMMAND:
