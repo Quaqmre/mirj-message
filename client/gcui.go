@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Quaqmre/mırjmessage/pb"
+	"github.com/Quaqmre/mirjmessage/pb"
 	"github.com/jroimartin/gocui"
 )
 

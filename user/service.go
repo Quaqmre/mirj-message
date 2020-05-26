@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Quaqmre/mırjmessage/logger"
+	"github.com/Quaqmre/mirjmessage/logger"
 )
 
 // // Service OutDoor tho user service

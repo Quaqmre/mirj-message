@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Quaqmre/mırjmessage/communication"
+	"github.com/Quaqmre/mirjmessage/communication"
 
-	"github.com/Quaqmre/mırjmessage/logger"
-	"github.com/Quaqmre/mırjmessage/user"
+	"github.com/Quaqmre/mirjmessage/logger"
+	"github.com/Quaqmre/mirjmessage/user"
 	"github.com/gorilla/websocket"
 )
 

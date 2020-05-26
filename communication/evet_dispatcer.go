@@ -3,7 +3,7 @@ package communication
 import (
 	"time"
 
-	"github.com/Quaqmre/mırjmessage/events"
+	"github.com/Quaqmre/mirjmessage/events"
 )
 
 type UserConnectedListener interface {

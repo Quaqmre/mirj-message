@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Quaqmre/mırjmessage/pb"
+	"github.com/Quaqmre/mirjmessage/pb"
 	"github.com/gorilla/websocket"
 	"github.com/jroimartin/gocui"
 	"google.golang.org/protobuf/proto"

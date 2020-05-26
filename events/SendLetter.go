@@ -1,8 +1,8 @@
 package events
 
-import "github.com/Quaqmre/mırjmessage/pb"
+import "github.com/Quaqmre/mirjmessage/pb"
 
 type SendLetter struct {
-	Letter *pb.Letter
+	Letter   *pb.Letter
 	ClientId int32
 }

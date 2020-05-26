@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/Quaqmre/mırjmessage/logger"
-	"github.com/Quaqmre/mırjmessage/mock"
+	"github.com/Quaqmre/mirjmessage/logger"
+	"github.com/Quaqmre/mirjmessage/mock"
 )
 
 func TestNewUser(t *testing.T) {

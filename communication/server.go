@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Quaqmre/mırjmessage/events"
-	"github.com/Quaqmre/mırjmessage/logger"
-	"github.com/Quaqmre/mırjmessage/user"
+	"github.com/Quaqmre/mirjmessage/events"
+	"github.com/Quaqmre/mirjmessage/logger"
+	"github.com/Quaqmre/mirjmessage/user"
 	"github.com/gorilla/websocket"
 )
 

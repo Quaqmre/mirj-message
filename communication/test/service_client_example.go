@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Quaqmre/mırjmessage/pb"
+	"github.com/Quaqmre/mirjmessage/pb"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )

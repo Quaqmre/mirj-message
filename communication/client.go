@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Quaqmre/mırjmessage/events"
-	"github.com/Quaqmre/mırjmessage/logger"
-	"github.com/Quaqmre/mırjmessage/pb"
-	"github.com/Quaqmre/mırjmessage/user"
+	"github.com/Quaqmre/mirjmessage/events"
+	"github.com/Quaqmre/mirjmessage/logger"
+	"github.com/Quaqmre/mirjmessage/pb"
+	"github.com/Quaqmre/mirjmessage/user"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )

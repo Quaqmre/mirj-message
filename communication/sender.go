@@ -3,9 +3,9 @@ package communication
 import (
 	"fmt"
 
-	"github.com/Quaqmre/mırjmessage/events"
-	"github.com/Quaqmre/mırjmessage/logger"
-	"github.com/Quaqmre/mırjmessage/pb"
+	"github.com/Quaqmre/mirjmessage/events"
+	"github.com/Quaqmre/mirjmessage/logger"
+	"github.com/Quaqmre/mirjmessage/pb"
 )
 
 type Sender struct {

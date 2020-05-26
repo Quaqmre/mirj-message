@@ -1,6 +1,6 @@
 package mock
 
-import "github.com/Quaqmre/mırjmessage/logger"
+import "github.com/Quaqmre/mirjmessage/logger"
 
 type mockedlogger struct{}
 
