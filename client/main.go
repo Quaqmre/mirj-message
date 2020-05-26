@@ -70,7 +70,6 @@ func main() {
 
 	g.SetManagerFunc(Layout)
 	g.SetViewOnTop("messages")
-	g.SetViewOnTop("users")
 	g.SetViewOnTop("input")
 	g.SetCurrentView("input")
 	g.Update(func(g *gocui.Gui) error {
