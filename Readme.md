@@ -17,7 +17,7 @@ USAGE:
     After Server up `go run main.go` or go install /client
     Client can connect server `go run client/*.go`
 
-    Example server: client -host=35.204.22.179:31901 -name=user
+    Example connection: client -host=35.204.22.179:31901 -name=user
 
     CLIEND COMMAND:
     &ls room => list all room and total count => done
