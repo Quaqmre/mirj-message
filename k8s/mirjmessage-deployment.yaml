@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: mirjmessage
-          image: quaqmre/kube:mirjmessage
+          image: quaqmre/mirjmessage:v1.0
           ports:
             - containerPort: 9001
