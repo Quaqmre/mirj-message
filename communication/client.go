@@ -35,22 +35,6 @@ type Client struct {
 	logger        logger.Service
 }
 
-// // NewService make interface of client service
-// func NewService() *Service {
-// 	return newservice()
-// }
-
-// func newservice() *Service {
-// 	return &Service{
-// 		Clients: make(map[string]*Client),
-// 	}
-// }
-
-// // New store with user and net connection
-// func (c *Service) New(ip string, con *websocket.Conn, userID int32) (*Client, error) {
-// 	return c.newClient(ip, con, userID)
-// }
-
 // TODO : bir kullanıcı sadece 1 kere mi clients içinde olablir ? Yoksa geçerli olanı mı dönmek gerek
 // INFO : client servisi her room özelinde bir tane generete edilmelidir.
 func NewClient(key string, user *user.User, con *websocket.Conn, userID int32, room *Room, server *Server) (*Client, error) {
@@ -85,11 +69,6 @@ func (c *Client) SendMessage(bytes *[]byte) {
 func (c *Client) Done() {
 	c.cancelContext()
 }
-
-// // Delete one client in the map
-// func (c *Service) Delete(ip string) {
-// 	delete(c.Clients, ip)
-// }
 
 func (c *Client) Listen() {
 	defer c.Con.Close()
@@ -129,12 +108,6 @@ func (c *Client) readFromWebSocket() {
 	if typ == websocket.BinaryMessage {
 		c.unmarshalUserInput(data)
 	}
-
-	// if err != nil {
-	// 	log.Fatal("during read message error: ", err)
-	// 	return
-	// }
-
 }
 
 func (c *Client) unmarshalUserInput(data []byte) {
@@ -210,9 +183,7 @@ func (c *Client) handleUserCommand(cmd *pb.Command) {
 		}
 		c.logger.Info("cmp", "client", "method", "ChangeUserName", "msg", fmt.Sprintf("user name %s->%s changed", oldUserName, c.User.Name))
 	case pb.Input_JOIN:
-		if c.room != nil {
-			c.room.EventDespatcher.FireUserQuit(c.QuitEvent())
-		}
+		c.room.EventDespatcher.FireUserQuit(c.QuitEvent())
 		roomName := cmd.Message
 		room, ok := c.server.Rooms[roomName]
 		if !ok {
@@ -226,9 +197,10 @@ func (c *Client) handleUserCommand(cmd *pb.Command) {
 		c.server.CreateRoom(cmd.Message)
 
 	case pb.Input_EXIT:
+		nopRoom := *c.room
+		nopRoom.EventDespatcher = c.server.NopEventDespacher
 		c.room.EventDespatcher.FireUserQuit(c.QuitEvent())
-		c.room = nil
-
+		c.room = &nopRoom
 	}
 }
 

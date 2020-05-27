@@ -54,7 +54,17 @@ func (handler *userQuitHandler) handle() {
 	}
 }
 
-type EventDispatcher struct {
+type EventDispatcher interface {
+	RunEventLoop()
+	FireUserConnected(event *events.UserConnected)
+	FireUserLetter(event *events.SendLetter)
+	FireUserQuit(event *events.UserQuit)
+
+	RegisterUserConnectedListener(listener UserConnectedListener)
+	RegisterUserLetterListener(listener UserLetterListener)
+	RegisterUserQuitListener(listener UserQuitListener)
+}
+type eventDispatcher struct {
 	running bool
 
 	// EVENT QUEUES
@@ -68,8 +78,9 @@ type EventDispatcher struct {
 	userQuitListeners      []UserQuitListener
 }
 
-func NewEventDispatcher() *EventDispatcher {
-	return &EventDispatcher{
+// NewEventDispatcher is return interface of dispatcher struct
+func NewEventDispatcher() EventDispatcher {
+	return &eventDispatcher{
 		running: false,
 
 		// EVENT QUEUES
@@ -82,7 +93,7 @@ func NewEventDispatcher() *EventDispatcher {
 		userQuitListeners:      []UserQuitListener{},
 	}
 }
-func (dispatcher *EventDispatcher) RunEventLoop() {
+func (dispatcher *eventDispatcher) RunEventLoop() {
 	dispatcher.running = true
 
 	for {
@@ -97,7 +108,7 @@ func (dispatcher *EventDispatcher) RunEventLoop() {
 	}
 }
 
-func (dispatcher *EventDispatcher) FireUserConnected(event *events.UserConnected) {
+func (dispatcher *eventDispatcher) FireUserConnected(event *events.UserConnected) {
 	handler := &userConnectedHandler{
 		event:          event,
 		eventListeners: dispatcher.userConnectedListeners,
@@ -105,12 +116,15 @@ func (dispatcher *EventDispatcher) FireUserConnected(event *events.UserConnected
 
 	dispatcher.priority1EventsQueue <- handler
 }
+func (dispatcher *eventDispatcher) RegisterUserConnectedListener(listener UserConnectedListener) {
+	dispatcher.userConnectedListeners = append(dispatcher.userConnectedListeners, listener)
+}
 
-func (dispatcher *EventDispatcher) RegisterUserQuitListener(listener UserQuitListener) {
+func (dispatcher *eventDispatcher) RegisterUserQuitListener(listener UserQuitListener) {
 	dispatcher.userQuitListeners = append(dispatcher.userQuitListeners, listener)
 }
 
-func (dispatcher *EventDispatcher) FireUserQuit(event *events.UserQuit) {
+func (dispatcher *eventDispatcher) FireUserQuit(event *events.UserQuit) {
 	handler := &userQuitHandler{
 		event:          event,
 		eventListeners: dispatcher.userQuitListeners,
@@ -119,11 +133,7 @@ func (dispatcher *EventDispatcher) FireUserQuit(event *events.UserQuit) {
 	dispatcher.priority1EventsQueue <- handler
 }
 
-func (dispatcher *EventDispatcher) RegisterUserConnectedListener(listener UserConnectedListener) {
-	dispatcher.userConnectedListeners = append(dispatcher.userConnectedListeners, listener)
-}
-
-func (dispatcher *EventDispatcher) FireUserLetter(event *events.SendLetter) {
+func (dispatcher *eventDispatcher) FireUserLetter(event *events.SendLetter) {
 	handler := &userLetterHandler{
 		event:          event,
 		eventListeners: dispatcher.userInputListener,
@@ -132,6 +142,37 @@ func (dispatcher *EventDispatcher) FireUserLetter(event *events.SendLetter) {
 	dispatcher.priority1EventsQueue <- handler
 }
 
-func (dispatcher *EventDispatcher) RegisterUserLetterListener(listener UserLetterListener) {
+func (dispatcher *eventDispatcher) RegisterUserLetterListener(listener UserLetterListener) {
 	dispatcher.userInputListener = append(dispatcher.userInputListener, listener)
+}
+
+type NopEventDespacher struct {
+	server *Server
+}
+
+func NewNopEventDespacher(server *Server) EventDispatcher {
+	return &NopEventDespacher{
+		server: server,
+	}
+}
+func (ned *NopEventDespacher) RunEventLoop() {
+
+}
+func (ned *NopEventDespacher) FireUserConnected(event *events.UserConnected) {
+	ned.server.logger.Info("cmp", "event_dispatcher", "method", "Nop_FireUserConnected", "msg", "Nop dispatcher")
+}
+func (ned *NopEventDespacher) FireUserLetter(event *events.SendLetter) {
+	ned.server.logger.Info("cmp", "event_dispatcher", "method", "Nop_FireUserLetter", "msg", "Nop dispatcher")
+}
+func (ned *NopEventDespacher) FireUserQuit(event *events.UserQuit) {
+	ned.server.logger.Info("cmp", "event_dispatcher", "method", "Nop_FireUserQuit", "msg", "Nop dispatcher")
+}
+func (ned *NopEventDespacher) RegisterUserConnectedListener(listener UserConnectedListener) {
+	ned.server.logger.Info("cmp", "event_dispatcher", "method", "Nop_RegisterUserConnectedListener", "msg", "Nop dispatcher")
+}
+func (ned *NopEventDespacher) RegisterUserLetterListener(listener UserLetterListener) {
+	ned.server.logger.Info("cmp", "event_dispatcher", "method", "Nop_RegisterUserLetterListener", "msg", "Nop dispatcher")
+}
+func (ned *NopEventDespacher) RegisterUserQuitListener(listener UserQuitListener) {
+	ned.server.logger.Info("cmp", "event_dispatcher", "method", "Nop_RegisterUserQuitListener", "msg", "Nop dispatcher")
 }

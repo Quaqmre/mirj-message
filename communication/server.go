@@ -11,11 +11,12 @@ import (
 )
 
 type Server struct {
-	Rooms       map[string]*Room
-	Clients     map[string]*Client
-	userService user.Service
-	logger      logger.Service
-	mx          sync.RWMutex
+	Rooms             map[string]*Room
+	Clients           map[string]*Client
+	userService       user.Service
+	logger            logger.Service
+	mx                sync.RWMutex
+	NopEventDespacher EventDispatcher
 }
 
 func NewServer(logger logger.Service, user user.Service) *Server {
@@ -25,6 +26,8 @@ func NewServer(logger logger.Service, user user.Service) *Server {
 		userService: user,
 		logger:      logger,
 	}
+	s.NopEventDespacher = NewNopEventDespacher(s)
+
 	s.CreateRoom("default")
 	return s
 }
@@ -32,10 +35,15 @@ func (s *Server) CreateRoom(name string) *Room {
 	rm := NewRoom(name, s.userService, s.logger, s)
 
 	// first handler for each event
-	sender := NewSender(rm)
-	rm.EventDespatcher.RegisterUserConnectedListener(sender)
-	rm.EventDespatcher.RegisterUserLetterListener(sender)
-	rm.EventDespatcher.RegisterUserQuitListener(sender)
+	sender := NewSender(rm, s)
+
+	eventD := NewEventDispatcher()
+	eventD.RegisterUserConnectedListener(sender)
+	eventD.RegisterUserLetterListener(sender)
+	eventD.RegisterUserQuitListener(sender)
+
+	rm.EventDespatcher = eventD
+
 	s.mx.Lock()
 	defer s.mx.Unlock()
 	s.Rooms[name] = rm

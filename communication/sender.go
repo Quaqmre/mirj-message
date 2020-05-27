@@ -4,21 +4,20 @@ import (
 	"fmt"
 
 	"github.com/Quaqmre/mirjmessage/events"
-	"github.com/Quaqmre/mirjmessage/logger"
 	"github.com/Quaqmre/mirjmessage/pb"
 )
 
 type Sender struct {
 	room               *Room
 	leaderboardCounter int32
-	logger             logger.Service
+	server             *Server
 }
 
-func NewSender(room *Room) *Sender {
+func NewSender(room *Room, server *Server) *Sender {
 	return &Sender{
 		room:               room,
 		leaderboardCounter: 0,
-		logger:             room.logger,
+		server:             server,
 	}
 }
 
@@ -26,21 +25,21 @@ func NewSender(room *Room) *Sender {
 func (sender *Sender) HandleUserConnected(userConnectedEvent *events.UserConnected) {
 	text := fmt.Sprintf("%s connected", userConnectedEvent.Name)
 	message := &pb.Message{Content: &pb.Message_Letter{Letter: &pb.Letter{Message: text}}}
-	cl := sender.room.server.Clients[userConnectedEvent.Key]
+	cl := sender.server.Clients[userConnectedEvent.Key]
 	sender.room.AddClient(cl)
 
 	sender.room.SendToAllClientsWithIgnored(message)
-	sender.logger.Info("cmp", "sender", "method", "HandleUserConnected", "msg", "user connected handled succesfully")
-	// sender.room.broadcastMessage(fmt.Sprintf("%s-%v user connected room", userConnectedEvent.Name, userConnectedEvent.ClientID))
+	sender.server.logger.Info("cmp", "sender", "method", "HandleUserConnected", "msg", "user connected handled succesfully")
+	// sender.broadcastMessage(fmt.Sprintf("%s-%v user connected room", userConnectedEvent.Name, userConnectedEvent.ClientID))
 }
 
 // HandleUserInput test
 func (sender *Sender) HandleUserLetter(userLettertedEvent *events.SendLetter) {
-	user := sender.room.userService.Get(userLettertedEvent.ClientId)
+	user := sender.server.userService.Get(userLettertedEvent.ClientId)
 	userLettertedEvent.Letter.Message = fmt.Sprintf("%s:%s", user.Name, userLettertedEvent.Letter.Message)
 	message := &pb.Message{Content: &pb.Message_Letter{Letter: userLettertedEvent.Letter}}
 	sender.room.SendToAllClientsWithIgnored(message, userLettertedEvent.ClientId)
-	sender.logger.Info("cmp", "sender", "method", "HandleUserLetter", "msg", "user letter handled succesfully")
+	sender.server.logger.Info("cmp", "sender", "method", "HandleUserLetter", "msg", "user letter handled succesfully")
 
 }
 
@@ -50,7 +49,7 @@ func (sender *Sender) HandleUserQuit(userQuitEvent *events.UserQuit) {
 	message := &pb.Message{Content: &pb.Message_Letter{Letter: &pb.Letter{Message: text}}}
 	sender.room.SendToAllClientsWithIgnored(message, userQuitEvent.ClientID)
 	sender.room.DeleteClient(userQuitEvent.Key)
-	sender.logger.Info("cmp", "sender", "method", "HandleUserQuit", "msg", "user quit handled succesfully")
+	sender.server.logger.Info("cmp", "sender", "method", "HandleUserQuit", "msg", "user quit handled succesfully")
 
-	// sender.room.broadcastMessage(fmt.Sprintf("%s-%v user connected room", userConnectedEvent.Name, userConnectedEvent.ClientID))
+	// sender.broadcastMessage(fmt.Sprintf("%s-%v user connected room", userConnectedEvent.Name, userConnectedEvent.ClientID))
 }
